@@ -67,7 +67,7 @@
 // ROS generated core, industrial, and pan-tilt messages.
 //
 #include "std_msgs/String.h"
-#include "sensor_msgs/JointState.h"
+#include "pan_tilt_control/OpState.h"
 #include "pan_tilt_control/JointStateExtended.h"
 
 //
@@ -80,12 +80,14 @@
 // RoadNarrows embedded pan-tilt library.
 //
 #include "pan_tilt/pan_tilt.h"
+#include "pan_tilt/ptJoint.h"
 #include "pan_tilt/ptRobot.h"
 
 //
 // Node headers.
 //
 #include "pan_tilt_control.h"
+#include "pan_tilt_as_calib.h"
 
 
 using namespace std;
@@ -95,8 +97,9 @@ using namespace pan_tilt;
 void ASCalibrate::execute_cb(
                           const pan_tilt_control::CalibrateGoalConstPtr &goal)
 {
-  PanTiltRobot &robot(pantilt_.getRobot());
-  int           rc;
+  PanTiltRobot           &robot(pantilt_.getRobot());
+  PanTiltJointStatePoint  state;
+  int                     rc;
 
   ROS_INFO("%s: Executing calibrate action - please standby.",
       action_name_.c_str());
@@ -109,7 +112,7 @@ void ASCalibrate::execute_cb(
   if( rc != PT_OK )
   {
     ROS_ERROR("%s: Failed to initiate calibration.", action_name_.c_str());
-    result_.op.calib_state = pan_tilt_control::UNCALIBRATED;
+    result_.op.calib_state = pan_tilt_control::OpState::UNCALIBRATED;
     as_.setAborted(result_);
     return;
   }
@@ -124,7 +127,7 @@ void ASCalibrate::execute_cb(
     if( as_.isPreemptRequested() || !ros::ok() )
     {
       ROS_INFO("%s: Execution preempted.", action_name_.c_str());
-      result_.op.calib_state = pan_tilt_control::UNCALIBRATED;
+      result_.op.calib_state = pan_tilt_control::OpState::UNCALIBRATED;
       as_.setPreempted(result_); // set the action state to preempted
       return;
     }
@@ -134,8 +137,8 @@ void ASCalibrate::execute_cb(
     //
     else
     {
-      pantilt_.updateExtendedJointStateMsg(robot.getRobotStatus(status),
-                                           feedback_.joint);
+      robot.getJointState(state);
+      pantilt_.updateExtendedJointStateMsg(state, feedback_.joint);
       as_.publishFeedback(feedback_);
       r.sleep();
     }
@@ -146,13 +149,13 @@ void ASCalibrate::execute_cb(
   if( (rc == PT_OK) && robot.isCalibrated() )
   {
     ROS_INFO("%s: Calibration succeeded.", action_name_.c_str());
-    result_.op.calib_state = pan_tilt_control::CALIBRATED;
+    result_.op.calib_state = pan_tilt_control::OpState::CALIBRATED;
     as_.setSucceeded(result_);
   }
   else
   {
     ROS_ERROR("Calibration failed with error code %d.", rc);
-    result_.op.calib_state = pan_tilt_control::UNCALIBRATED;
+    result_.op.calib_state = pan_tilt_control::OpState::UNCALIBRATED;
     as_.setAborted(result_);
   }
 }

@@ -70,6 +70,7 @@ catkin_package(
 )
 
 add_executable(pan_tilt_control
+  src/pan_tilt_as_calib.cpp
   src/pan_tilt_control.cpp
   src/pan_tilt_control_main.cpp
 )
