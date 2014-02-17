@@ -54,6 +54,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "rnr/rnrconfig.h"
+#include "rnr/log.h"
 
 #include "Dynamixel/Dynamixel.h"
 #include "Dynamixel/DynaServo.h"

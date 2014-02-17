@@ -31,6 +31,10 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
 )
 
+set(RN_LOGGING_COMPILE_FLAGS "-DLOG -DLOGMOD=\\\"libpan_tilt\\\"")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${RN_LOGGING_COMPILE_FLAGS}")
+#message(STATUS, ${CMAKE_CXX_FLAGS})
+
 add_library(pan_tilt
   src/ptCalib.cxx
   src/ptDesc.cxx

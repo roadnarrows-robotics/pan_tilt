@@ -52,6 +52,9 @@
  */
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "rnr/rnrconfig.h"
+#include "rnr/log.h"
+
 #include "Dynamixel/Dynamixel.h"
 
 #include "pan_tilt/pan_tilt.h"

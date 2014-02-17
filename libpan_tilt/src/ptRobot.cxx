@@ -349,12 +349,12 @@ int PanTiltRobot::calibrate(bool bForceRecalib)
 
 int PanTiltRobot::gotoZeroPtPos()
 {
-  PanTiltJointTrajectoryPoint   trajPoint;
-  MapRobotJoints::iterator  iter;
+  PanTiltJointTrajectoryPoint trajPoint;
+  MapRobotJoints::iterator    iter;
 
-  int             nMasterServoId;
+  int                 nMasterServoId;
   PanTiltRobotJoint  *pJoint;
-  int             rc;
+  int                 rc;
 
   PT_TRY_CONN();
   PT_TRY_CALIB();
@@ -1660,15 +1660,37 @@ int PanTiltRobot::createAsyncThread()
 
 void PanTiltRobot::cancelAsyncTask()
 {
+  MapRobotJoints::iterator  iter;
+
   if( m_eAsyncTaskState != PanTiltAsyncTaskStateIdle )
   {
+    // cancel thread
     pthread_cancel(m_threadAsync);
     pthread_join(m_threadAsync, NULL);
+
+    // cleanup
+    switch( m_eAsyncTaskId )
+    {
+      case AsyncTaskIdCalibrate:
+        freeze();
+        for(iter = m_kin.begin(); iter != m_kin.end(); ++iter)
+        {
+          if( iter->second.m_eOpState != PanTiltOpStateCalibrated )
+          {
+            iter->second.m_eOpState = PanTiltOpStateUncalibrated;
+            m_eOpState              = PanTiltOpStateUncalibrated;
+          }
+        }
+        break;
+      default:
+        break;
+    }
+
+    // clear state
     m_eAsyncTaskId    = AsyncTaskIdNone;
     m_pAsyncTaskArg   = NULL;
     m_rcAsyncTask     = -PT_ECODE_INTR;
     m_eAsyncTaskState = PanTiltAsyncTaskStateIdle;
-    freeze();
     LOGDIAG3("Async task canceled.");
   }
 }

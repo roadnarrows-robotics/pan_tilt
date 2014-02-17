@@ -154,7 +154,14 @@ void ASCalibrate::execute_cb(
     result_.op.calib_state = pan_tilt_control::OpState::CALIBRATED;
     as_.setSucceeded(result_);
   }
-  // nope
+  // preempted
+  else if( as_.isPreemptRequested() || !ros::ok() )
+  {
+    ROS_INFO("%s: Calibration preempted.", action_name_.c_str());
+    result_.op.calib_state = pan_tilt_control::OpState::UNCALIBRATED;
+    as_.setPreempted(result_); // set the action state to preempted
+  }
+  // failed
   else
   {
     ROS_ERROR("Calibration failed with error code %d.", rc);
@@ -167,6 +174,4 @@ void ASCalibrate::preempt_cb()
 {
   ROS_INFO("%s: Preempt calibration.", action_name_.c_str());
   pantilt_.getRobot().cancelAsyncTask();
-  //RDK as_.setPreempted(); need this?
-  //RDK as_.acceptNewGoal(); does return from execution autoset this state?
 }

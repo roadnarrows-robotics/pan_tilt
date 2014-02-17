@@ -54,8 +54,8 @@ from industrial_msgs.msg import RobotMode
 from industrial_msgs.msg import TriState
 
 from actionlib_msgs.msg import GoalStatus
+from pan_tilt_control.calibrate_ac import *
 
-from pan_tilt_control.msg import CalibrateAction
 from pan_tilt_control.msg import RobotStatusExtended
 from pan_tilt_control.msg import JointStateExtended
 from pan_tilt_control.msg import ServoHealth
@@ -93,8 +93,8 @@ imagePath = [
 ## \brief User's home directory.
 home = os.path.expanduser("~")
 
-## \brief Hekateros user-specific configuration directory (in home directory).
-hekUserDirName = ".pan_tilt"
+## \brief Pan-tilt user-specific configuration directory (in home directory).
+pantiltUserDirName = ".roadnarrows"
 
 ## \brief pan_tilt_panel application configuration file name.
 configFileName = "pan_tilt_panel.xml"
@@ -229,7 +229,7 @@ class configXml():
 <?xml-stylesheet type="text/xsl" href="http://roadnarrows.com/xml/PanTilt/1.0/pan_tilt.xsl"?>
 
 <!-- RoadNarrows Pan-Tilt Top-Level Configuration -->
-<hekateros xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<pantilt xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:noNamespaceSchemaLocation="http://roadnarrows.com/xml/PanTilt/1.0/pan_tilt.xsd">
 
   <!-- pan_tilt_panel configuration -->
@@ -242,14 +242,14 @@ class configXml():
     fp.write("""\
   </pan_tilt_panel>
 
-</hekateros>
+</pantilt>
 """)
 
     fp.close()
 
   def onElemStart(self, elem, attrs):
     #print "start-of-element", "<%s> attrs=%s" % (elem, repr(attrs))
-    if elem == 'hekateros':
+    if elem == 'pantilt':
       self.m_inRootElem = True
     elif elem == 'pan_tilt_panel':
       if self.m_inRootElem:
@@ -273,7 +273,7 @@ class configXml():
       self.cvtToBool(self.m_curCfgElem, self.m_curData.strip())
     if elem == 'pan_tilt_panel':
       self.m_inMainElem = False
-    elif elem == 'hekateros':
+    elif elem == 'pantilt':
       self.m_inRootElem = False
       self.m_inMainElem = False
     m_curCfgElem = None
@@ -443,7 +443,7 @@ class configDlg(Toplevel):
     else:
       self.m_config['warn_on_release'] = False
 
-    dirname = home + os.path.sep + hekUserDirName
+    dirname = home + os.path.sep + pantiltUserDirName
     if not os.path.isdir(dirname):
       try:
         os.mkdir(dirname, 0755)
@@ -1024,7 +1024,7 @@ class aboutDlg(Toplevel):
     w.grid(row=row, column=1, padx=2, sticky=W)
 
     w = Button(frame)
-    w['text']   = 'www.roadnarrows.com/Hekateros'
+    w['text']   = 'www.roadnarrows.com/'
     w['fg']   = '#aa0000'
     w['activeforeground']   = '#cc0033'
     w['activebackground']   = w['bg']
@@ -1082,9 +1082,9 @@ class aboutDlg(Toplevel):
     w = Label(frame)
     w['text']   = """
 The RoadNarrows Pan-Tilt robotic mechanism is designed and developed by
-RoadNarrows, a robotics and intelligent systems
-company base in Colorado USA. We are dedictated to supporting open software and
-hardware interfaces to foster a global community of users and developers."""
+RoadNarrows, a robotics and intelligent systems company base in Colorado USA.
+We are dedictated to supporting open software and hardware interfaces to foster
+a global community of users and developers."""
     w['justify'] = LEFT
     w['anchor'] = W
     w.grid(row=row, column=0, columnspan=3, padx=5, sticky=W)
@@ -1213,14 +1213,14 @@ class window(Frame):
     w['anchor'] = CENTER
     w.grid(row=0, column=1, sticky=E+W)
 
-    # hek logo
+    # pantilt logo
     w = Label(self)
     self.m_icons['pan_tilt_logo'] = loadIcon("icons/icon_pan_tilt_logo.png");
     if self.m_icons['pan_tilt_logo']:
       w['image'] = self.m_icons['pan_tilt_logo']
       w['anchor'] = E
     else:
-      w['text'] = 'hek'
+      w['text'] = 'pantilt'
       w['anchor'] = E
       w['width'] = 5
     w.grid(row=0, column=2, sticky=E)
@@ -1282,20 +1282,22 @@ class window(Frame):
     wframe['relief'] = 'ridge'
     wframe.grid(row=0, column=0, padx=1, pady=3, sticky=N+W+E)
 
-    width = 14
+    width = 18
     row   = 0
     col   = 0
 
     # robot mode status
     var = StringVar()
-    var.set("Auto mode")
+    text, color = self.toRobotMode(RobotMode.AUTO)
+    var.set("Mode: " + text)
     w = Entry(wframe)
     w['borderwidth'] = 2
     w['relief']   = 'flat'
     w['width']    = width
     w['textvar']  = var
-    w['fg']       = fgColors['normal']
+    w['fg']       = color
     w['state']    = 'readonly'
+    #w['relief']   = 'groove'
     w.grid(row=row, column=col, padx=0, pady=0, sticky=W+E)
     d = {'val': RobotMode.AUTO, 'var': var, 'w': w}
     self.m_robotStatus['mode'] = d
@@ -1304,14 +1306,16 @@ class window(Frame):
 
     # robot calibration status
     var = StringVar()
-    var.set("Not calibrated")
+    text, color = self.toCalib(TriState.FALSE)
+    var.set("State: " + text)
     w = Entry(wframe)
     w['borderwidth'] = 2
     w['relief']   = 'flat'
     w['width']    = width
     w['textvar']  = var
-    w['fg']       = fgColors['normal']
+    w['fg']       = color
     w['state']    = 'readonly'
+    #w['relief']   = 'groove'
     w.grid(row=row, column=col, padx=0, pady=0, sticky=W+E)
     d = {'val': TriState.FALSE, 'var': var, 'w': w}
     self.m_robotStatus['calibration'] = d
@@ -1320,21 +1324,23 @@ class window(Frame):
 
     # robot motors status
     var = StringVar()
-    var.set("Motors unpowered")
+    text, color = self.toMotorsPowered(TriState.FALSE)
+    var.set("Motors: " + text)
     w = Entry(wframe)
     w['borderwidth'] = 2
     w['relief']   = 'flat'
     w['width']    = width
     w['textvar']  = var
-    w['fg']       = fgColors['normal']
+    w['fg']       = color
     w['state']    = 'readonly'
+    #w['relief']   = 'groove'
     w.grid(row=row, column=col, padx=0, pady=0, sticky=W+E)
     d = {'val': TriState.ON, 'var': var, 'w': w}
     self.m_robotStatus['motors'] = d
 
     col += 1
 
-    spacer = Label(wframe, text=' ', width=40)
+    spacer = Label(wframe, text=' ', width=15)
     spacer.grid(row=row, column=col, padx=0, pady=0, sticky=W+E)
 
     col += 1
@@ -1455,11 +1461,16 @@ class window(Frame):
 
     # top rows of labels
     for text in ['', '', '',
-        'Position', 'Odometer', 'Encoder',
-        'Velocity', 'Speed',
-        'Effort', 'Temperature', 'Voltage',
+        ' Position  ',
+        ' Odometer  ',
+        '  Encoder  ',
+        ' Velocity  ',
+        '   Speed   ',
+        '   Effort  ',
+        'Temperature',
+        '  Voltage  ',
         '']:
-      w = Label(wframe, width=width, padx=padx, pady=pady, anchor=CENTER,
+      w = Label(wframe, width=width, padx=padx, pady=pady, anchor=W,
           font=helv, text=text)
       w.grid(row=row, column=col, sticky=W)
       col += 1
@@ -1469,12 +1480,20 @@ class window(Frame):
     col  = 0
 
     # second rows of labels or units
-    for text in ['Joint', 'Servo Id', 'State',
-        '(degrees)', '(ticks)', '(ticks)',
-        '(% of max)', '(raw)',
-        '(raw)', '(C)', '(volts)',
-        'Alarms']:
-      w = Label(wframe, width=width, padx=padx, pady=pady, anchor=CENTER,
+    for text in [
+        '   Joint   ',
+        ' Servo Id  ',
+        '   State   ',
+        ' (degrees) ',
+        '  (ticks)  ',
+        '  (ticks)  ',
+        '(% of max) ',
+        '   (raw)   ',
+        '   (raw)   ',
+        '    (C)    ',
+        '  (volts)  ',
+        '  Alarms   ']:
+      w = Label(wframe, width=width, padx=padx, pady=pady, anchor=W,
           font=helv, text=text)
       w.grid(row=row, column=col, sticky=W)
       col += 1
@@ -1789,6 +1808,7 @@ Make sure the workspace is clear of obstructions.""")
       self.m_wBttn['calibrate']['text'] = "Calibrate"
       if self.m_calibState['id'] != 0:
         self.m_calibState['id'] = 0
+      self.showError("Calibration preempted.")
       self.update_idletasks()
 
   #
@@ -1806,18 +1826,18 @@ Make sure the workspace is clear of obstructions.""")
       self.m_wBttn['calibrate']['text'] = "Calibrate"
       self.m_calibState['calibrating'] = False
       self.m_calibState['id'] = 0
-      if self.m_calibState['ac'].get_result() >= 0:
+      if self.m_calibState['ac'].get_result().op == OpState.CALIBRATED:
         self.showInfo("Calibration complete.")
       else:
         self.showError("Calibration failed.")
       self.update_idletasks()
 
   #
-  ## @brief monitor the calibration feedback
+  ## \brief monitor the calibration feedback.
   #
-  def calibrate_monitor(self, fb):
+  def calibrate_monitor(self, feedback):
     if self.m_bHasJointPanel:
-      self.showJointStates(fb.joint)
+      self.showJointStates(feedback.joint)
   
   #
   ## \brief Go to zero point position callback.
@@ -1830,7 +1850,7 @@ Make sure the workspace is clear of obstructions.""")
       return
     try:
       goto_zero_pt = rospy.ServiceProxy('pan_tilt_control/goto_zero', 
-                                        GotoZeroPt)
+                                        GotoZeroPtSvc)
       goto_zero_pt()
     except rospy.ServiceException, e:
       self.showError("Goto zero point failed: %s." % (e.message))
@@ -1850,7 +1870,7 @@ Make sure the workspace is clear of obstructions.""")
       jointTrajPoint.positions.append(degToRad(pos))
       jointTrajPoint.velocities.append(10.0)
       jointTrajPoint.accelerations.append(0.0)
-    dlg = moveDlg(master=self, image='HekaterosInMotion.png',
+    dlg = moveDlg(master=self, image='PanTiltInMotion.png',
                                 trajectory=jointTrajectory)
     if not dlg.m_result:
       return
@@ -1880,8 +1900,7 @@ Make sure the workspace is clear of obstructions.""")
         self.showEStop()
         return
       try:
-        estop = rospy.ServiceProxy('pan_tilt_control/estop',
-                                          EStop)
+        estop = rospy.ServiceProxy('pan_tilt_control/estop', EStopSvc)
         estop()
       except rospy.ServiceException, e:
         self.showError("Emergency stop request failed: %s." % (e.message))
@@ -1934,7 +1953,7 @@ Make sure the workspace is clear of obstructions.""")
       self.showError('Freeze pan-tilt: ' + e.message + '.')
       return
     try:
-      freeze = rospy.ServiceProxy('pan_tilt_control/freeze', Freeze)
+      freeze = rospy.ServiceProxy('pan_tilt_control/freeze', FreezeSvc)
       freeze()
     except rospy.ServiceException, e:
       self.showError("Freeze pan-tilt request failed: %s." % (e.message))
@@ -1947,7 +1966,7 @@ Make sure the workspace is clear of obstructions.""")
   def release(self):
     if self.m_config['warn_on_release']:
       dlg = warnDlg(master=self,
-                    image="HekFalling.png",
+                    image="PanTiltFalling.png",
                     msg="""\
 The pan-tilt motors will become unpowered.
 The pan-tilt may fall if not in a stable position.""")
@@ -1959,7 +1978,7 @@ The pan-tilt may fall if not in a stable position.""")
       self.showError('Release pan-tilt: ' + e.message + '.')
       return
     try:
-      release = rospy.ServiceProxy('pan_tilt_control/release', Release)
+      release = rospy.ServiceProxy('pan_tilt_control/release', ReleaseSvc)
       release()
     except rospy.ServiceException, e:
       self.showError("Release pan-tilt request failed: %s." % (e.message))
@@ -1977,7 +1996,7 @@ The pan-tilt may fall if not in a stable position.""")
       return
     try:
       clear_alarms = rospy.ServiceProxy('pan_tilt_control/clear_alarms',
-                                          ClearAlarms)
+                                          ClearAlarmsSvc)
       clear_alarms()
     except rospy.ServiceException, e:
       self.showError("Clear alarms request failed: %s." % (e.message))
@@ -2004,7 +2023,7 @@ The pan-tilt may fall if not in a stable position.""")
       try:
         get_product_info = rospy.ServiceProxy(
                                           'pan_tilt_control/get_product_info',
-                                          GetProductInfo)
+                                          GetProductInfoSvc)
         rsp = get_product_info()
         prodInfo = rsp.i
       except rospy.ServiceException, e:
@@ -2056,7 +2075,7 @@ The pan-tilt may fall if not in a stable position.""")
       text, fg = self.toRobotMode(status.mode.val)
       self.m_robotStatus[key]['val'] = status.mode.val
       self.showEntry(self.m_robotStatus[key]['w'],
-                     self.m_robotStatus[key]['var'], text, fg)
+          self.m_robotStatus[key]['var'], "Mode: "+text, fg)
       if bNoMoves:
         state = 'disabled'
       else:
@@ -2068,7 +2087,7 @@ The pan-tilt may fall if not in a stable position.""")
       text, fg = self.toCalib(status.is_calibrated.val)
       self.m_robotStatus[key]['val'] = status.is_calibrated.val
       self.showEntry(self.m_robotStatus[key]['w'],
-                     self.m_robotStatus[key]['var'], text, fg)
+          self.m_robotStatus[key]['var'], "State: "+text, fg)
       if status.is_calibrated.val == TriState.TRUE:
         state = 'normal'
       else:
@@ -2081,7 +2100,7 @@ The pan-tilt may fall if not in a stable position.""")
       text, fg = self.toMotorsPowered(status.drives_powered.val)
       self.m_robotStatus[key]['val'] = status.drives_powered.val
       self.showEntry(self.m_robotStatus[key]['w'],
-                     self.m_robotStatus[key]['var'], text, fg)
+          self.m_robotStatus[key]['var'], "Motors: "+text, fg)
 
     key = 'moving_led'
     if self.m_robotStatus[key]['val'] != status.in_motion.val:
@@ -2239,9 +2258,9 @@ The pan-tilt may fall if not in a stable position.""")
 
   def toRobotMode(self, mode):
     if mode == RobotMode.MANUAL:
-      return ("Manual mode", fgColors['normal'])
+      return ("Manual", fgColors['normal'])
     elif mode == RobotMode.AUTO:
-      return ("Auto mode", fgColors['normal'])
+      return ("Auto", fgColors['normal'])
     else:
       return (repr(mode), fgColors['error'])
 
@@ -2255,9 +2274,9 @@ The pan-tilt may fall if not in a stable position.""")
 
   def toMotorsPowered(self, tristate):
     if tristate == TriState.FALSE:
-      return ("Motors unpowered", fgColors['normal'])
+      return ("Unpowered", fgColors['normal'])
     elif tristate == TriState.TRUE:
-      return ("Motors powered", fgColors['normal'])
+      return ("Powered", fgColors['normal'])
     else:
       return (repr(tristate), fgColors['error'])
 
@@ -2344,7 +2363,7 @@ class usage(Exception):
 # ------------------------------------------------------------------------------
 
 ##
-## \brief Hekateros control panel.
+## \brief Pan-Tilt control panel.
 ##
 class application():
 
@@ -2418,7 +2437,7 @@ Options and arguments:
     return kwargs
 
   #
-  ## \brief Initialize interface to hek_robot.
+  ## \brief Initialize interface to pan_tilt_control.
   #
   def initRobot(self):
     self.m_win.showInfo("Initializing interface to pan-tilt.")
@@ -2435,7 +2454,7 @@ Options and arguments:
                      JointStateExtended, 
                      self.m_win.updateJointStates) 
 
-    # publish trajectory to hekateros controller
+    # publish trajectory to pan-tilt controller
     self.m_win.m_joint_cmd_pub = rospy.Publisher(
         "pan_tilt_control/joint_command",
         trajectory_msgs.msg.JointTrajectory)
@@ -2456,7 +2475,7 @@ Options and arguments:
     kwargs = self.getOptions(argv, **kwargs)
 
     # parse application configuration xml file
-    filename = home + os.path.sep + hekUserDirName + os.path.sep + \
+    filename = home + os.path.sep + pantiltUserDirName + os.path.sep + \
         configFileName
     xml = configXml()
     config = xml.parse(filename)

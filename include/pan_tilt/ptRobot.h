@@ -59,6 +59,7 @@
 
 #include "rnr/rnrconfig.h"
 #include "rnr/units.h"
+#include "rnr/log.h"
 
 #include <string>
 #include <map>
