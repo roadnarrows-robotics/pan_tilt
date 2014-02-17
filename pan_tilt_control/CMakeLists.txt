@@ -21,7 +21,7 @@ find_package(rnr)
 
 #message(STATUS, "${rnr_LIBRARIES}")
 
-#catkin_python_setup()
+catkin_python_setup()
 
 add_message_files(
   DIRECTORY msg
@@ -91,10 +91,10 @@ target_link_libraries(pan_tilt_control
 
 add_dependencies(pan_tilt_control pan_tilt_control_gencpp)
 
-#install(
-#  PROGRAMS 
-#    scripts/pantilt_panel
-#    scripts/pantilt_teleop
-#    scripts/joint_trajectory_demo 
-#  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-#)
+install(
+  PROGRAMS 
+    scripts/pan_tilt_panel
+#    scripts/pan_tilt_teleop
+#    scripts/pan_tilt_trajectory_demo 
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

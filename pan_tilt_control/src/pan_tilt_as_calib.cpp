@@ -144,14 +144,17 @@ void ASCalibrate::execute_cb(
     }
   }
 
+  // check outcome of asynchronous task
   rc = robot.getAsyncRc();
 
+  // got calibrated
   if( (rc == PT_OK) && robot.isCalibrated() )
   {
     ROS_INFO("%s: Calibration succeeded.", action_name_.c_str());
     result_.op.calib_state = pan_tilt_control::OpState::CALIBRATED;
     as_.setSucceeded(result_);
   }
+  // nope
   else
   {
     ROS_ERROR("Calibration failed with error code %d.", rc);
