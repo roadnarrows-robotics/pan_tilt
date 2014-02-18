@@ -50,11 +50,12 @@ import xml.parsers.expat as expat
 import roslib; roslib.load_manifest('pan_tilt_control')
 import rospy
 
+import actionlib
+from actionlib_msgs.msg import GoalStatus
+import trajectory_msgs.msg
+
 from industrial_msgs.msg import RobotMode
 from industrial_msgs.msg import TriState
-
-from actionlib_msgs.msg import GoalStatus
-from pan_tilt_control.calibrate_ac import *
 
 from pan_tilt_control.msg import RobotStatusExtended
 from pan_tilt_control.msg import JointStateExtended
@@ -62,17 +63,18 @@ from pan_tilt_control.msg import ServoHealth
 from pan_tilt_control.msg import OpState
 from pan_tilt_control.msg import ProductInfo
 
-from pan_tilt_control.srv import GotoZeroPtSvc
-from pan_tilt_control.srv import EStopSvc
-from pan_tilt_control.srv import ResetEStopSvc
-from pan_tilt_control.srv import FreezeSvc
-from pan_tilt_control.srv import ReleaseSvc
-from pan_tilt_control.srv import ClearAlarmsSvc
-from pan_tilt_control.srv import GetProductInfoSvc
+from pan_tilt_control.srv import GotoZeroPt
+from pan_tilt_control.srv import EStop
+from pan_tilt_control.srv import ResetEStop
+from pan_tilt_control.srv import Freeze
+from pan_tilt_control.srv import Release
+from pan_tilt_control.srv import ClearAlarms
+from pan_tilt_control.srv import GetProductInfo
 
-import actionlib
-import pan_tilt_control.msg
-import trajectory_msgs.msg
+#import pan_tilt_control.msg
+
+from pan_tilt_control.ACCalibrate import *
+from pan_tilt_control.AboutDlg import AboutDlg
 
 
 # ------------------------------------------------------------------------------
@@ -842,279 +844,6 @@ class moveDlg(Toplevel):
     self.destroy()
 
 
-# ------------------------------------------------------------------------------
-# Class aboutDlg
-# ------------------------------------------------------------------------------
-
-class aboutDlg(Toplevel):
-  #
-  ## \brief Constructor.
-  ##
-  ## \param cnf     Configuration dictionary.
-  ## \param kw      Keyword options.
-  #
-  def __init__(self, master=None, cnf={}, **kw):
-    # initialize dialog data
-    kw = self.initData(kw)
-
-    Toplevel.__init__(self, master=master, cnf=cnf, **kw)
-    self.title("About Pan-Tilt")
-
-    # create and show widgets
-    self.createWidgets()
-
-    # allows the enter button to fire either button's action
-    self.m_bttnOk.bind('<KeyPress-Return>', func=self.close)
-
-    # center the dialog over parent panel
-    if master is not None:
-      self.update_idletasks()
-      x0 = master.winfo_rootx()
-      y0 = master.winfo_rooty()
-      xp = x0 + (master.winfo_width() - self.winfo_width()) / 2 - 8
-      yp = y0 + (master.winfo_height() - self.winfo_height()) / 2 - 20
-      glist = [self.winfo_width(), self.winfo_height(), xp, yp]
-      #self.withdraw() # hide the dialog until position and size is set
-      self.geometry('{0}x{1}+{2}+{3}'.format(*glist))
-      #self.deiconify() # now show
-
-    # start with ok button focused
-    #self.m_bttnOk.focus_set()
-
-    # allows us to customize what happens when the close button is pressed
-    self.protocol("WM_DELETE_WINDOW", self.close)
-
-    #
-    # Modal diagle settings.
-    #
-    # set the focus on dialog window (needed on Windows)
-    self.focus_set()
-
-    # make sure events only go to our dialog
-    self.grab_set()
-
-    # make sure dialog stays on top of its parent window (if needed)
-    self.transient(master)
-
-    # display the window and wait for it to close
-    self.wait_window(self)
-
-  #
-  ## \brief Initialize class state data.
-  ##
-  ## \param kw      Keyword options.
-  ##
-  ## \return Modified keywords sans this specific class.
-  ##
-  def initData(self, kw):
-    self.m_icons          = {}    # must keep loaded icons referenced
-    self.m_prodName       = "Pan-Tilt"
-    self.m_hwVer          = "1.0.0"
-    self.m_prodId         = 0x00
-    self.m_prodBrief      = "Pan-Tilt Robotic Mechanism"
-    self.m_rnUrl          = "http://www.roadnarrows.com"
-    self.m_rnEmail        = "support@roadnarrows.com"
-    self.m_rnTel          = "+1.800.275.9568"
-    if kw.has_key('info'):
-      info = kw['info']
-      if info is not None:
-        self.m_hwVer = info.version_string
-        self.m_prodName = info.product_name
-        self.m_prodId = info.product_id
-        self.m_prodBrief = info.desc
-      del kw['info']
-    return kw
-
-  #
-  ## \brief Create gui widgets with supporting data and show.
-  #
-  def createWidgets(self):
-    frame = Frame(self)
-    frame.grid(row=0, column=0)
-
-    self.m_icons['pan_tilt_logo'] = loadIcon("PanTiltLogo.png")
-
-    # top heading
-    w = Label(frame)
-    times32 = tkFont.Font(family="Times",size=32,weight="bold")
-    w['font']   = times32
-    w['text']   = 'Pan-Tilt'
-    w['anchor'] = W
-    w.grid(row=0, column=1, columnspan=2, sticky=E+W)
-
-    lwidth = 10
-    rwidth = 26
-
-    row = 1
-
-    # product brief
-    w = Label(frame)
-    w['text']   = self.m_prodBrief
-    w['anchor'] = W
-    w['width']  = rwidth
-    w.grid(row=row, column=1, columnspan=2, padx=2, sticky=W)
-
-    row += 1
-
-    # product name
-    w = Label(frame)
-    w['text']   = 'Product:'
-    w['anchor'] = W
-    w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
-
-    w = Label(frame)
-    w['text']   = self.m_prodName
-    w['anchor'] = W
-    w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
-
-    row += 1
-
-    # product id
-    w = Label(frame)
-    w['text']   = 'Product Id:'
-    w['anchor'] = W
-    w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
-
-    w = Label(frame)
-    w['text']   = "%08x" % (self.m_prodId)
-    w['anchor'] = W
-    w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
-
-    row += 1
-
-    # hw version
-    w = Label(frame)
-    w['text']   = 'HW Version:'
-    w['anchor'] = W
-    w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
-
-    w = Label(frame)
-    w['text']   = self.m_hwVer
-    w['anchor'] = W
-    w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
-
-    row += 1
-
-    # app version
-    w = Label(frame)
-    w['text']   = 'App Version:'
-    w['anchor'] = W
-    w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
-
-    w = Label(frame)
-    w['text']   = appVersion
-    w['anchor'] = W
-    w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
-
-    row += 1
-
-    # url
-    w = Label(frame)
-    w['text']   = 'URL:'
-    w['anchor'] = W
-    w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
-
-    w = Button(frame)
-    w['text']   = 'www.roadnarrows.com/'
-    w['fg']   = '#aa0000'
-    w['activeforeground']   = '#cc0033'
-    w['activebackground']   = w['bg']
-    w['cursor'] = 'hand1'
-    w['anchor'] = W
-    w['justify'] = LEFT
-    w['relief']   = 'flat'
-    w['borderwidth']   = 0
-    w['padx']   = 0
-    w['pady']   = 0
-    w['width']  = rwidth
-    w['command']  = lambda aurl=self.m_rnUrl:webbrowser.open_new(self.m_rnUrl)
-    w.grid(row=row, column=2, ipadx=0, ipady=0, padx=2, pady=0, sticky=W)
-
-    row += 1
-
-    # support email
-    w = Label(frame)
-    w['text']   = 'Email:'
-    w['anchor'] = W
-    w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
-
-    w = Label(frame)
-    w['text']   = self.m_rnEmail
-    w['anchor'] = W
-    w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
-
-    row += 1
-
-    # telephone
-    w = Label(frame)
-    w['text']   = 'Tel:'
-    w['anchor'] = W
-    w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
-
-    w = Label(frame)
-    w['text']   = self.m_rnTel
-    w['anchor'] = W
-    w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
-
-    row += 1
-
-    # product logo
-    w = Label(frame)
-    if self.m_icons['pan_tilt_logo'] is not None:
-      w['image']  = self.m_icons['pan_tilt_logo']
-    w['anchor'] = CENTER
-    w.grid(row=0, column=0, rowspan=row, sticky=W+N+S)
-
-    # who
-    w = Label(frame)
-    w['text']   = """
-The RoadNarrows Pan-Tilt robotic mechanism is designed and developed by
-RoadNarrows, a robotics and intelligent systems company base in Colorado USA.
-We are dedictated to supporting open software and hardware interfaces to foster
-a global community of users and developers."""
-    w['justify'] = LEFT
-    w['anchor'] = W
-    w.grid(row=row, column=0, columnspan=3, padx=5, sticky=W)
-
-    row += 1
-
-    # ok button
-    w = Button(frame, width=10, text='OK', command=self.close)
-    w.grid(row=row, column=0, columnspan=3, pady=5)
-    w['anchor']  = CENTER
-    self.m_bttnOk = w
-
-    row += 1
-
-    # legal
-    w = Label(frame)
-    helv8 = tkFont.Font(family="Helvetica",size=8)
-    w['font']   = helv8
-    w['anchor'] = W
-    w['fg']     = '#666666'
-    w['text']   = "Pan-Tilt logos are the trademarks of " \
-                  "RoadNarrows LLC"
-    w.grid(row=row, column=0, columnspan=3, pady=5)
-
-  #
-  ## \brief Destroy window callback.
-  #
-  def close(self):
-    self.destroy()
-
 
 # ------------------------------------------------------------------------------
 # Class window
@@ -1779,7 +1508,7 @@ Make sure the workspace is clear of obstructions.""")
 
       # create calibration action client, if not already created
       if self.m_calibState['ac'] is None:
-        self.m_calibState['ac'] = calibrate_ac()
+        self.m_calibState['ac'] = ACCalibrate()
 
       # start calibration
       if not self.m_calibState['ac'].exec_calib(self.calibrate_monitor,
@@ -1850,7 +1579,7 @@ Make sure the workspace is clear of obstructions.""")
       return
     try:
       goto_zero_pt = rospy.ServiceProxy('pan_tilt_control/goto_zero', 
-                                        GotoZeroPtSvc)
+                                        GotoZeroPt)
       goto_zero_pt()
     except rospy.ServiceException, e:
       self.showError("Goto zero point failed: %s." % (e.message))
@@ -1900,7 +1629,7 @@ Make sure the workspace is clear of obstructions.""")
         self.showEStop()
         return
       try:
-        estop = rospy.ServiceProxy('pan_tilt_control/estop', EStopSvc)
+        estop = rospy.ServiceProxy('pan_tilt_control/estop', EStop)
         estop()
       except rospy.ServiceException, e:
         self.showError("Emergency stop request failed: %s." % (e.message))
@@ -1953,7 +1682,7 @@ Make sure the workspace is clear of obstructions.""")
       self.showError('Freeze pan-tilt: ' + e.message + '.')
       return
     try:
-      freeze = rospy.ServiceProxy('pan_tilt_control/freeze', FreezeSvc)
+      freeze = rospy.ServiceProxy('pan_tilt_control/freeze', Freeze)
       freeze()
     except rospy.ServiceException, e:
       self.showError("Freeze pan-tilt request failed: %s." % (e.message))
@@ -1978,7 +1707,7 @@ The pan-tilt may fall if not in a stable position.""")
       self.showError('Release pan-tilt: ' + e.message + '.')
       return
     try:
-      release = rospy.ServiceProxy('pan_tilt_control/release', ReleaseSvc)
+      release = rospy.ServiceProxy('pan_tilt_control/release', Release)
       release()
     except rospy.ServiceException, e:
       self.showError("Release pan-tilt request failed: %s." % (e.message))
@@ -1996,7 +1725,7 @@ The pan-tilt may fall if not in a stable position.""")
       return
     try:
       clear_alarms = rospy.ServiceProxy('pan_tilt_control/clear_alarms',
-                                          ClearAlarmsSvc)
+                                          ClearAlarms)
       clear_alarms()
     except rospy.ServiceException, e:
       self.showError("Clear alarms request failed: %s." % (e.message))
@@ -2023,12 +1752,12 @@ The pan-tilt may fall if not in a stable position.""")
       try:
         get_product_info = rospy.ServiceProxy(
                                           'pan_tilt_control/get_product_info',
-                                          GetProductInfoSvc)
+                                          GetProductInfo)
         rsp = get_product_info()
         prodInfo = rsp.i
       except rospy.ServiceException, e:
         self.showError("Get product info request failed: %s." % (e.message))
-    dlg = aboutDlg(master=self, info=prodInfo)
+    dlg = AboutDlg(master=self, info=prodInfo, app_ver=appVersion)
   
   #
   ## \brief Update robot status.

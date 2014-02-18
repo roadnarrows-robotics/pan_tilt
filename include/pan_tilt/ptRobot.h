@@ -115,7 +115,9 @@ namespace pan_tilt
     enum AsyncTaskId
     {
       AsyncTaskIdNone,        ///< no task
-      AsyncTaskIdCalibrate    ///< calibrate pan-tilt task id
+      AsyncTaskIdCalibrate,   ///< calibrate pan-tilt task id
+      AsyncTaskIdPan,         ///< pan
+      AsyncTaskIdSweep        ///< sweep
 
       // add others here, as needed
     };
@@ -176,18 +178,12 @@ namespace pan_tilt
      */
     int calibrateAsync(bool bForceRecalib=true)
     {
-      if( m_eAsyncTaskState != PanTiltAsyncTaskStateIdle )
-      {
-        LOGERROR("Already executing asynchronous task.");
-        return -PT_ECODE_NO_RSRC;
-      }
-      else
-      {
-        m_eAsyncTaskId  = AsyncTaskIdCalibrate;
-        m_pAsyncTaskArg = (void *)bForceRecalib;
+      cancelAsyncTask();
 
-        return createAsyncThread();
-      }
+      m_eAsyncTaskId  = AsyncTaskIdCalibrate;
+      m_pAsyncTaskArg = (void *)bForceRecalib;
+
+      return createAsyncThread();
     }
 
 
@@ -205,6 +201,9 @@ namespace pan_tilt
      * \copydoc doc_return_std
      */
     int gotoZeroPtPos();
+
+    int pan(double fMinPos, double fMaxPos, double fVelocity);
+
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Fundamental Pan-Tilt Operations
@@ -687,14 +686,14 @@ namespace pan_tilt
     IMapRobotJoints   m_imapKin;        ///< robot indirect kinematic map
 
     // motion
-    PanTiltJointTrajectoryPoint m_lastTraj; ///< last trajectory point
+    PanTiltJointTrajectoryPoint m_lastTraj;   ///< last trajectory point
 
     // asynchronous task control
     PanTiltAsyncTaskState m_eAsyncTaskState;  ///< asynchronous task state
-    int               m_rcAsyncTask;      ///< last async task return code
-    AsyncTaskId       m_eAsyncTaskId;     ///< asynchronous task id
-    void             *m_pAsyncTaskArg;    ///< asynchronous argument
-    pthread_t         m_threadAsync;      ///< async pthread identifier 
+    int                   m_rcAsyncTask;      ///< last async task return code
+    AsyncTaskId           m_eAsyncTaskId;     ///< asynchronous task id
+    void                 *m_pAsyncTaskArg;    ///< asynchronous argument
+    pthread_t             m_threadAsync;      ///< async pthread identifier 
 
     friend class PanTiltCalib;
 
@@ -935,6 +934,10 @@ namespace pan_tilt
      * \return Returns NULL on thread exit.
      */
      static void *asyncThread(void *pArg);
+
+     int asyncThExecCalibrate();
+
+     int asyncThExecPan();
   };
 
 } // namespace pan_tilt

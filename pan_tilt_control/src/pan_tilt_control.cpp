@@ -81,17 +81,17 @@
 //
 // ROS generatated pan-tilt services.
 //
-#include "pan_tilt_control/ClearAlarmsSvc.h"
-#include "pan_tilt_control/EStopSvc.h"
-#include "pan_tilt_control/FreezeSvc.h"
-#include "pan_tilt_control/GetProductInfoSvc.h"
-#include "pan_tilt_control/GotoZeroPtSvc.h"
-#include "pan_tilt_control/IsAlarmedSvc.h"
-#include "pan_tilt_control/IsCalibratedSvc.h"
-#include "pan_tilt_control/ReleaseSvc.h"
-#include "pan_tilt_control/ResetEStopSvc.h"
-#include "pan_tilt_control/SetRobotModeSvc.h"
-#include "pan_tilt_control/StopSvc.h"
+#include "pan_tilt_control/ClearAlarms.h"
+#include "pan_tilt_control/EStop.h"
+#include "pan_tilt_control/Freeze.h"
+#include "pan_tilt_control/GetProductInfo.h"
+#include "pan_tilt_control/GotoZeroPt.h"
+#include "pan_tilt_control/IsAlarmed.h"
+#include "pan_tilt_control/IsCalibrated.h"
+#include "pan_tilt_control/Release.h"
+#include "pan_tilt_control/ResetEStop.h"
+#include "pan_tilt_control/SetRobotMode.h"
+#include "pan_tilt_control/Stop.h"
 
 //
 // ROS generated action servers.
@@ -193,8 +193,8 @@ void PanTiltControl::advertiseServices()
                                           &(*this));
 }
 
-bool PanTiltControl::clearAlarms(ClearAlarmsSvc::Request  &req,
-                                 ClearAlarmsSvc::Response &rsp)
+bool PanTiltControl::clearAlarms(ClearAlarms::Request  &req,
+                                 ClearAlarms::Response &rsp)
 {
   ROS_DEBUG("clear_alarms");
 
@@ -203,8 +203,8 @@ bool PanTiltControl::clearAlarms(ClearAlarmsSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::estop(EStopSvc::Request  &req,
-                           EStopSvc::Response &rsp)
+bool PanTiltControl::estop(EStop::Request  &req,
+                           EStop::Response &rsp)
 {
   ROS_DEBUG("estop");
 
@@ -215,8 +215,8 @@ bool PanTiltControl::estop(EStopSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::freeze(FreezeSvc::Request  &req,
-                            FreezeSvc::Response &rsp)
+bool PanTiltControl::freeze(Freeze::Request  &req,
+                            Freeze::Response &rsp)
 {
   ROS_DEBUG("freeze");
 
@@ -225,8 +225,8 @@ bool PanTiltControl::freeze(FreezeSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::getProductInfo(GetProductInfoSvc::Request  &req,
-                                    GetProductInfoSvc::Response &rsp)
+bool PanTiltControl::getProductInfo(GetProductInfo::Request  &req,
+                                    GetProductInfo::Response &rsp)
 {
   int   nMajor, nMinor, nRev;
 
@@ -245,8 +245,8 @@ bool PanTiltControl::getProductInfo(GetProductInfoSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::gotoZeroPt(GotoZeroPtSvc::Request  &req,
-                                GotoZeroPtSvc::Response &rsp)
+bool PanTiltControl::gotoZeroPt(GotoZeroPt::Request  &req,
+                                GotoZeroPt::Response &rsp)
 {
   ROS_DEBUG("goto_zero");
 
@@ -257,8 +257,8 @@ bool PanTiltControl::gotoZeroPt(GotoZeroPtSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::isAlarmed(IsAlarmedSvc::Request  &req,
-                               IsAlarmedSvc::Response &rsp)
+bool PanTiltControl::isAlarmed(IsAlarmed::Request  &req,
+                               IsAlarmed::Response &rsp)
 {
   ROS_DEBUG("is_alarmed");
 
@@ -267,8 +267,8 @@ bool PanTiltControl::isAlarmed(IsAlarmedSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::isCalibrated(IsCalibratedSvc::Request  &req,
-                                  IsCalibratedSvc::Response &rsp)
+bool PanTiltControl::isCalibrated(IsCalibrated::Request  &req,
+                                  IsCalibrated::Response &rsp)
 {
   ROS_DEBUG("is_calibrated");
 
@@ -277,8 +277,8 @@ bool PanTiltControl::isCalibrated(IsCalibratedSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::release(ReleaseSvc::Request  &req,
-                             ReleaseSvc::Response &rsp)
+bool PanTiltControl::release(Release::Request  &req,
+                             Release::Response &rsp)
 {
   ROS_DEBUG("release");
 
@@ -287,8 +287,8 @@ bool PanTiltControl::release(ReleaseSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::resetEStop(ResetEStopSvc::Request  &req,
-                                ResetEStopSvc::Response &rsp)
+bool PanTiltControl::resetEStop(ResetEStop::Request  &req,
+                                ResetEStop::Response &rsp)
 {
   ROS_DEBUG("reset_estop");
 
@@ -299,8 +299,8 @@ bool PanTiltControl::resetEStop(ResetEStopSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::setRobotMode(SetRobotModeSvc::Request  &req,
-                                  SetRobotModeSvc::Response &rsp)
+bool PanTiltControl::setRobotMode(SetRobotMode::Request  &req,
+                                  SetRobotMode::Response &rsp)
 {
   ROS_DEBUG("set_robot_mode");
 
@@ -309,8 +309,8 @@ bool PanTiltControl::setRobotMode(SetRobotModeSvc::Request  &req,
   return true;
 }
 
-bool PanTiltControl::stop(StopSvc::Request  &req,
-                          StopSvc::Response &rsp)
+bool PanTiltControl::stop(Stop::Request  &req,
+                          Stop::Response &rsp)
 {
   ROS_DEBUG("stop");
 

@@ -7,7 +7,7 @@ import actionlib
 
 import pan_tilt_control.msg
 
-class calibrate_ac(object):
+class ACCalibrate(object):
 
     def __init__(self):
         self.c = actionlib.SimpleActionClient(

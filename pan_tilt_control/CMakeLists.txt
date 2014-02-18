@@ -36,18 +36,18 @@ add_message_files(
 add_service_files(
   DIRECTORY srv
   FILES
-    CalibrateSvc.srv 
-    ClearAlarmsSvc.srv 
-    EStopSvc.srv 
-    FreezeSvc.srv 
-    GetProductInfoSvc.srv 
-    GotoZeroPtSvc.srv 
-    IsAlarmedSvc.srv 
-    IsCalibratedSvc.srv 
-    ReleaseSvc.srv
-    ResetEStopSvc.srv 
-    SetRobotModeSvc.srv
-    StopSvc.srv
+    Calibrate.srv 
+    ClearAlarms.srv 
+    EStop.srv 
+    Freeze.srv 
+    GetProductInfo.srv 
+    GotoZeroPt.srv 
+    IsAlarmed.srv 
+    IsCalibrated.srv 
+    Release.srv
+    ResetEStop.srv 
+    SetRobotMode.srv
+    Stop.srv
 )
 
 add_action_files(

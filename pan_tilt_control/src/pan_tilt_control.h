@@ -83,17 +83,17 @@
 //
 // ROS generatated pan-tilt services.
 //
-#include "pan_tilt_control/ClearAlarmsSvc.h"
-#include "pan_tilt_control/EStopSvc.h"
-#include "pan_tilt_control/FreezeSvc.h"
-#include "pan_tilt_control/GetProductInfoSvc.h"
-#include "pan_tilt_control/GotoZeroPtSvc.h"
-#include "pan_tilt_control/IsAlarmedSvc.h"
-#include "pan_tilt_control/IsCalibratedSvc.h"
-#include "pan_tilt_control/ReleaseSvc.h"
-#include "pan_tilt_control/ResetEStopSvc.h"
-#include "pan_tilt_control/SetRobotModeSvc.h"
-#include "pan_tilt_control/StopSvc.h"
+#include "pan_tilt_control/ClearAlarms.h"
+#include "pan_tilt_control/EStop.h"
+#include "pan_tilt_control/Freeze.h"
+#include "pan_tilt_control/GetProductInfo.h"
+#include "pan_tilt_control/GotoZeroPt.h"
+#include "pan_tilt_control/IsAlarmed.h"
+#include "pan_tilt_control/IsCalibrated.h"
+#include "pan_tilt_control/Release.h"
+#include "pan_tilt_control/ResetEStop.h"
+#include "pan_tilt_control/SetRobotMode.h"
+#include "pan_tilt_control/Stop.h"
 
 //
 // ROS generated action servers.
@@ -197,38 +197,38 @@ namespace pan_tilt
     // Service callbacks
     //..........................................................................
 
-    bool clearAlarms(pan_tilt_control::ClearAlarmsSvc::Request  &req,
-                     pan_tilt_control::ClearAlarmsSvc::Response &rsp);
+    bool clearAlarms(pan_tilt_control::ClearAlarms::Request  &req,
+                     pan_tilt_control::ClearAlarms::Response &rsp);
 
-    bool estop(pan_tilt_control::EStopSvc::Request  &req,
-               pan_tilt_control::EStopSvc::Response &rsp);
+    bool estop(pan_tilt_control::EStop::Request  &req,
+               pan_tilt_control::EStop::Response &rsp);
 
-    bool freeze(pan_tilt_control::FreezeSvc::Request  &req,
-                pan_tilt_control::FreezeSvc::Response &rsp);
+    bool freeze(pan_tilt_control::Freeze::Request  &req,
+                pan_tilt_control::Freeze::Response &rsp);
 
-    bool getProductInfo(pan_tilt_control::GetProductInfoSvc::Request  &req,
-                        pan_tilt_control::GetProductInfoSvc::Response &rsp);
+    bool getProductInfo(pan_tilt_control::GetProductInfo::Request  &req,
+                        pan_tilt_control::GetProductInfo::Response &rsp);
 
-    bool gotoZeroPt(pan_tilt_control::GotoZeroPtSvc::Request  &req,
-                    pan_tilt_control::GotoZeroPtSvc::Response &rsp);
+    bool gotoZeroPt(pan_tilt_control::GotoZeroPt::Request  &req,
+                    pan_tilt_control::GotoZeroPt::Response &rsp);
 
-    bool isAlarmed(pan_tilt_control::IsAlarmedSvc::Request  &req,
-                   pan_tilt_control::IsAlarmedSvc::Response &rsp);
+    bool isAlarmed(pan_tilt_control::IsAlarmed::Request  &req,
+                   pan_tilt_control::IsAlarmed::Response &rsp);
 
-    bool isCalibrated(pan_tilt_control::IsCalibratedSvc::Request  &req,
-                      pan_tilt_control::IsCalibratedSvc::Response &rsp);
+    bool isCalibrated(pan_tilt_control::IsCalibrated::Request  &req,
+                      pan_tilt_control::IsCalibrated::Response &rsp);
 
-    bool release(pan_tilt_control::ReleaseSvc::Request  &req,
-                 pan_tilt_control::ReleaseSvc::Response &rsp);
+    bool release(pan_tilt_control::Release::Request  &req,
+                 pan_tilt_control::Release::Response &rsp);
 
-    bool resetEStop(pan_tilt_control::ResetEStopSvc::Request  &req,
-                    pan_tilt_control::ResetEStopSvc::Response &rsp);
+    bool resetEStop(pan_tilt_control::ResetEStop::Request  &req,
+                    pan_tilt_control::ResetEStop::Response &rsp);
 
-    bool setRobotMode(pan_tilt_control::SetRobotModeSvc::Request  &req,
-                      pan_tilt_control::SetRobotModeSvc::Response &rsp);
+    bool setRobotMode(pan_tilt_control::SetRobotMode::Request  &req,
+                      pan_tilt_control::SetRobotMode::Response &rsp);
 
-    bool stop(pan_tilt_control::StopSvc::Request  &req,
-              pan_tilt_control::StopSvc::Response &rsp);
+    bool stop(pan_tilt_control::Stop::Request  &req,
+              pan_tilt_control::Stop::Response &rsp);
 
 
     //..........................................................................

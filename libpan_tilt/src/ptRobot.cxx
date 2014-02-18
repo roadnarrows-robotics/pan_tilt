@@ -391,6 +391,26 @@ int PanTiltRobot::gotoZeroPtPos()
   return rc;
 }
 
+int PanTiltRobot::pan(double fMinPos, double fMaxPos, double fVelocity)
+{
+  PanTiltJointTrajectoryPoint *pTraj;
+
+  PT_TRY_CONN();
+  PT_TRY_CALIB();
+  PT_TRY_NOT_ESTOP();
+
+  cancelAsyncTask();
+
+  m_lastTraj.clear();
+
+  pTraj = new PanTiltJointTrajectoryPoint[2];
+
+  m_eAsyncTaskId  = AsyncTaskIdPan;
+  m_pAsyncTaskArg = (void *)pTraj;
+
+  return createAsyncThread();
+}
+
 int PanTiltRobot::estop()
 {
   PT_TRY_CONN();
@@ -492,6 +512,8 @@ int PanTiltRobot::move(PanTiltJointTrajectoryPoint &trajectoryPoint)
   PT_TRY_CONN();
   PT_TRY_CALIB();
   PT_TRY_NOT_ESTOP();
+
+  cancelAsyncTask();
 
   // automatically power up servos if not powered
   if( !m_bAreServosPowered )
@@ -1682,6 +1704,14 @@ void PanTiltRobot::cancelAsyncTask()
           }
         }
         break;
+      case AsyncTaskIdPan:
+      case AsyncTaskIdSweep:
+        freeze();
+        if( m_pAsyncTaskArg != NULL )
+        {
+          delete[] (PanTiltJointTrajectoryPoint *)m_pAsyncTaskArg;
+        }
+        break;
       default:
         break;
     }
@@ -1716,21 +1746,18 @@ void *PanTiltRobot::asyncThread(void *pArg)
   {
     // Calibrate the robot. 
     case AsyncTaskIdCalibrate:
-      {
-        bool bForceRecalib = (bool)pThis->m_pAsyncTaskArg;
-        rc = pThis->calibrate(bForceRecalib);
-      }
+      rc = pThis->asyncThExecCalibrate();
       break;
-
+    // Pan continuously.
+    case AsyncTaskIdPan:
+      rc = pThis->asyncThExecPan();
+      break;
     // Unknown task id.
     default:
       LOGERROR("Unknown async task id = %d.", (int)pThis->m_eAsyncTaskId);
       rc = -PT_ECODE_BAD_VAL;
       break;
   }
-
-  // freeze robot at current calibrated or aborted position.
-  //pThis->freeze();  disable, so that goto zero pt in calibration finsishes
 
   pThis->m_eAsyncTaskId     = AsyncTaskIdNone;
   pThis->m_pAsyncTaskArg    = NULL;
@@ -1740,4 +1767,15 @@ void *PanTiltRobot::asyncThread(void *pArg)
   LOGDIAG3("Async robot task thread exited.");
 
   return NULL;
+}
+
+int PanTiltRobot::asyncThExecCalibrate()
+{
+  bool bForceRecalib = (bool)m_pAsyncTaskArg;
+
+  return calibrate(bForceRecalib);
+}
+
+int PanTiltRobot::asyncThExecPan()
+{
 }
