@@ -34,6 +34,8 @@ import os
 import time
 import math
 
+from pkg_resources import *
+
 from Tkinter import *
 from Tkconstants import *
 from tkFileDialog import *
@@ -42,35 +44,70 @@ import tkFont
 from PIL import Image, ImageTk
 
 # ------------------------------------------------------------------------------
-# Utilities
+# Class ImageLoader
 # ------------------------------------------------------------------------------
 
 #
-## \brief Load icon image from file name.
-##
-## \param filename    Icon file name.
-##
-## \return Returns icon widget on success, None on failure.
+## \brief Class to handle image loading.
 #
-def loadIcon(filename, imagePath='.:/usr/local/icons/pan_tilt'):
-  # no file name
-  if filename is None or len(filename) == 0:
-    return None;
-  # absolute file name
-  if filename[0] == os.path.sep:
-    try:
-      return ImageTk.PhotoImage(Image.open(filename))
-    except IOError:
-      return None
-  # relative file name - search path for file
-  for path in imagePath:
-    fqname = path + os.path.sep + filename
-    try:
-      return ImageTk.PhotoImage(Image.open(fqname))
-    except IOError:
-      continue
-  return None
+class ImageLoader:
 
+  #
+  ## \brief Constructor
+  ##
+  ## \param py_pkg      Python resource (e.g. "pan_tilt_control.images").
+  ## \param image_paths List of directory paths to search for the image.
+  #
+  def __init__(self, py_pkg=None, image_paths=[]):
+    self.m_pyPkg = py_pkg
+    if len(image_paths) > 0:
+      self.m_imagePaths = image_paths
+    else:
+      self.m_imagePaths = ['.']
+  
+  #
+  ## \brief Class to handle image loading.
+  #Load icon image from file name.
+  ##
+  ## \param filename    Icon file name.
+  ##
+  ## \return Returns icon widget on success, None on failure.
+  #
+  def load(self, filename):
+    # no file name
+    if filename is None or len(filename) == 0:
+      return None;
+    # absolute file name
+    if filename[0] == os.path.sep:
+      try:
+        return ImageTk.PhotoImage(Image.open(filename))
+      except IOError:
+        return None
+    # relative file name - try python resource(s) first
+    if self.m_pyPkg:
+      try:
+        fqname = resource_filename(self.m_pyPkg, filename)
+        try:
+          return ImageTk.PhotoImage(Image.open(fqname))
+        except IOError:
+          pass
+      except ImportError:
+        pass
+    # relative file name - search path for file
+    for path in self.m_imagePaths:
+      fqname = path + os.path.sep + filename
+      try:
+        return ImageTk.PhotoImage(Image.open(fqname))
+      except IOError:
+        continue
+    return None
+
+
+# ------------------------------------------------------------------------------
+# Misc. Utilities
+# ------------------------------------------------------------------------------
+
+#
 #
 ## Round to nearest 100th.
 #
@@ -94,6 +131,3 @@ def degToRad(deg):
 #
 def radToDeg(rad):
   return rad / math.pi * 180.0
-
-
-

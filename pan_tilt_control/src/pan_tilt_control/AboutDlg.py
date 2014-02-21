@@ -135,10 +135,12 @@ class AboutDlg(Toplevel):
   ## \brief Create gui widgets with supporting data and show.
   #
   def createWidgets(self):
+    imageLoader = ImageLoader(py_pkg="pan_tilt_control.images")
+
     frame = Frame(self)
     frame.grid(row=0, column=0)
 
-    self.m_icons['pan_tilt_logo'] = loadIcon("PanTiltLogo.png")
+    self.m_icons['pan_tilt_logo'] = imageLoader.load("PanTiltLogo.png")
 
     # top heading
     w = Label(frame)

@@ -109,7 +109,8 @@ class WarnDlg(Toplevel):
     else:
       self.m_title = "Warning"
     if kw.has_key('image'):
-      self.m_icons['image'] = loadIcon(kw['image'])
+      imageLoader = ImageLoader(py_pkg='pan_tilt_control.images')
+      self.m_icons['image'] = imageLoader.load(kw['image'])
       del kw['image']
     else:
       self.m_icons['image'] = None

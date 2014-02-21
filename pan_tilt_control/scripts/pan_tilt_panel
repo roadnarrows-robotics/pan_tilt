@@ -120,37 +120,6 @@ fgColors = {
 
 
 # ------------------------------------------------------------------------------
-# Utilities
-# ------------------------------------------------------------------------------
-
-#
-## \brief Load icon image from file name.
-##
-## \param filename    Icon file name.
-##
-## \return Returns icon widget on success, None on failure.
-#
-def xloadIcon(filename):
-  # no file name
-  if filename is None or len(filename) == 0:
-    return None;
-  # absolute file name
-  if filename[0] == os.path.sep:
-    try:
-      return ImageTk.PhotoImage(Image.open(filename))
-    except IOError:
-      return None
-  # relative file name - search path for file
-  for path in imagePath:
-    fqname = path + os.path.sep + filename
-    try:
-      return ImageTk.PhotoImage(Image.open(fqname))
-    except IOError:
-      continue
-  return None
-
-
-# ------------------------------------------------------------------------------
 # Class window
 # ------------------------------------------------------------------------------
 
@@ -218,6 +187,8 @@ class window(Frame):
   ## \brief Create gui widgets with supporting data and show.
   #
   def createWidgets(self):
+    self.m_imageLoader = ImageLoader(py_pkg='pan_tilt_control.images',
+                                      image_paths=imagePath)
     self.createHeading()
     self.createLeftButtons()
     self.createCenterPanel()
@@ -231,7 +202,7 @@ class window(Frame):
   def createHeading(self):
     # rn logo
     w = Label(self)
-    self.m_icons['rn_logo'] = xloadIcon("RNLogo48.png");
+    self.m_icons['rn_logo'] = self.m_imageLoader.load("RNLogo48.png");
     if self.m_icons['rn_logo']:
       w['image'] = self.m_icons['rn_logo']
     else:
@@ -249,7 +220,7 @@ class window(Frame):
 
     # pantilt logo
     w = Label(self)
-    self.m_icons['pan_tilt_logo'] = xloadIcon("icons/icon_pan_tilt_logo.png");
+    self.m_icons['pan_tilt_logo'] = self.m_imageLoader.load("icons/icon_pan_tilt_logo.png");
     if self.m_icons['pan_tilt_logo']:
       w['image'] = self.m_icons['pan_tilt_logo']
       w['anchor'] = E
@@ -274,7 +245,7 @@ class window(Frame):
     w = self.createButton(wframe, "Calibrate", "icons/icon_calib.png",
                             self.calibrate)
     w.grid(row=row, column=0, sticky=N+E+W)
-    self.m_icons['calibrate_cancel'] = xloadIcon("icons/icon_calib_cancel.png")
+    self.m_icons['calibrate_cancel'] = self.m_imageLoader.load("icons/icon_calib_cancel.png")
     self.m_keysNoMoves.append('calibrate')
 
     # zero point
@@ -408,9 +379,9 @@ class window(Frame):
     wframe['relief'] = 'flat'
     wframe.grid(row=row, column=col, padx=1, pady=3, sticky=N+E)
 
-    self.m_icons['led_dark']  = xloadIcon("icons/icon_led_dark_16.png")
-    self.m_icons['led_green'] = xloadIcon("icons/icon_led_green_16.png")
-    self.m_icons['led_red']   = xloadIcon("icons/icon_led_red_16.png")
+    self.m_icons['led_dark']  = self.m_imageLoader.load("icons/icon_led_dark_16.png")
+    self.m_icons['led_green'] = self.m_imageLoader.load("icons/icon_led_green_16.png")
+    self.m_icons['led_red']   = self.m_imageLoader.load("icons/icon_led_red_16.png")
 
     row = 0
     col = 0
@@ -763,7 +734,7 @@ class window(Frame):
     w = self.createButton(wframe, "ESTOP", "icons/icon_estop.png", self.estop,
                                   fg='red')
     w.grid(row=0, column=0, sticky=N+E+W)
-    self.m_icons['estop_reset'] = xloadIcon("icons/icon_estop_reset.png")
+    self.m_icons['estop_reset'] = self.m_imageLoader.load("icons/icon_estop_reset.png")
 
     # freeze
     w = self.createButton(wframe, "Freeze",
@@ -837,7 +808,7 @@ class window(Frame):
   #
   def createButton(self, parent, text, imagefile, command, fg='black'):
     key = str.lower(text.replace("\n", "_"))
-    self.m_icons[key] = xloadIcon(imagefile)
+    self.m_icons[key] = self.m_imageLoader.load(imagefile)
     w = Button(parent)
     w['text']     = text
     if self.m_icons[key]:

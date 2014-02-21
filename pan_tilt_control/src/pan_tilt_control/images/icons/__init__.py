@@ -1,0 +1,22 @@
+## All images in pan_tilt_control package.
+__all__ = [
+  'icon_alarm.png',
+  'icon_calib.png',
+  'icon_calib_cancel.png',
+  'icon_down.png',
+  'icon_estop.png',
+  'icon_estop_reset.png',
+  'icon_exit.png',
+  'icon_info.png',
+  'icon_led_dark_16.png',
+  'icon_led_green_16.png',
+  'icon_led_red_16.png',
+  'icon_left.png',
+  'icon_pan_tilt_logo.png',
+  'icon_pause.png',
+  'icon_right.png',
+  'icon_pause.png',
+  'icon_settings.png',
+  'icon_stop.png',
+  'icon_up.png',
+]
