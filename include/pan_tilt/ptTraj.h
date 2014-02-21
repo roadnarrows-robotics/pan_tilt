@@ -302,8 +302,8 @@ namespace pan_tilt
     }
 
   protected:
-    std::vector<PanTiltJointTraj>   m_trajectory;       ///< trajectory
-    uint_t                      m_uTimeFromStart;   ///< duration
+    std::vector<PanTiltJointTraj> m_trajectory;       ///< trajectory
+    uint_t                        m_uTimeFromStart;   ///< duration
   };
 
 

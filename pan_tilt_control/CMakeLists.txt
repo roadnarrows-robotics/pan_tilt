@@ -44,10 +44,12 @@ add_service_files(
     GotoZeroPt.srv 
     IsAlarmed.srv 
     IsCalibrated.srv 
+    Pan.srv
     Release.srv
     ResetEStop.srv 
     SetRobotMode.srv
     Stop.srv
+    Sweep.srv
 )
 
 add_action_files(

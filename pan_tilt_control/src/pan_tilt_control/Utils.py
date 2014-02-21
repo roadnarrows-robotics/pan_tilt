@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 ###############################################################################
 #
 #
@@ -34,6 +32,7 @@
 import sys
 import os
 import time
+import math
 
 from Tkinter import *
 from Tkconstants import *

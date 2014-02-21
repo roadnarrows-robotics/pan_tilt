@@ -198,11 +198,43 @@ namespace pan_tilt
      * This move assumes an unrestricted workspace save for an horizontal plane
      * defined by the platform on which the pan-tilt is mounted to.
      *
+     * \param bOverride         Do [not] override any asynchronouse task.
+     *
      * \copydoc doc_return_std
      */
-    int gotoZeroPtPos();
+    int gotoZeroPtPos(bool bOverride=true);
 
+    /*!
+     * \brief Continuously pan left-right.
+     *
+     * This function starts the asynchronous thread to exectute the actual
+     * pan function.
+     *
+     * \param fMinPos   Pan minimum end position (radians).
+     * \param fMaxPos   Pan maximum end position (radians).
+     * \param fVelocity Pan velocity (percent of maximum).
+     *
+     * \copydoc doc_return_std
+     */
     int pan(double fMinPos, double fMaxPos, double fVelocity);
+
+    /*!
+     * \brief Continuously sweep left-right and up-down.
+     *
+     * This function starts the asynchronous thread to exectute the actual
+     * sweep function.
+     *
+     * \param fPanMinPos    Pan minimum end position (radians).
+     * \param fPanMaxPos    Pan maximum end position (radians).
+     * \param fPanVel       Pan velocity (percent of maximum).
+     * \param fTiltMinPos   Tilt minimum end position (radians).
+     * \param fTiltMaxPos   Tilt maximum end position (radians).
+     * \param fTiltVel      Tilt velocity (percent of maximum).
+     *
+     * \copydoc doc_return_std
+     */
+    int sweep(double fPanMinPos,  double fPanMaxPos,  double fPanVel,
+              double fTiltMinPos, double fTiltMaxPos, double fTiltVel);
 
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -223,9 +255,11 @@ namespace pan_tilt
      *
      * Servos are still being driven.
      *
+     * \param bOverride         Do [not] override any asynchronouse task.
+     *
      * \copydoc doc_return_std
      */
-    int freeze();
+    int freeze(bool bOverride=true);
 
     /*!
      * \brief Release pan-tilt.
@@ -260,10 +294,11 @@ namespace pan_tilt
      * \brief Move pan-tilt through trajectory point.
      *
      * \param trajectoryPoint   Trajectory end point.
+     * \param bOverride         Do [not] override any asynchronouse task.
      *
      * \copydoc doc_return_std
      */
-    int move(PanTiltJointTrajectoryPoint &trajectoryPoint);
+    int move(PanTiltJointTrajectoryPoint &trajectoryPoint, bool bOverride=true);
 
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -307,7 +342,6 @@ namespace pan_tilt
       m_eRobotMode = eRobotMode;
     }
 
-    /*!
     /*!
      * \brief Test if any joint in any of the kinematic chains is moving.
      *
@@ -933,11 +967,28 @@ namespace pan_tilt
      * 
      * \return Returns NULL on thread exit.
      */
-     static void *asyncThread(void *pArg);
+    static void *asyncThread(void *pArg);
 
-     int asyncThExecCalibrate();
+    /*
+     * \brief Execute calibration in asynchronous thread.
+     *
+     * \copydoc doc_return_std
+     */
+    int asyncThExecCalibrate();
 
-     int asyncThExecPan();
+    /*
+     * \brief Execute continuous panning in asynchronous thread.
+     *
+     * \copydoc doc_return_std
+     */
+    int asyncThExecPan();
+
+    /*
+     * \brief Execute continuous sweeping in asynchronous thread.
+     *
+     * \copydoc doc_return_std
+     */
+    int asyncThExecSweep();
   };
 
 } // namespace pan_tilt

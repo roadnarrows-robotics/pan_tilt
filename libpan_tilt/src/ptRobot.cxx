@@ -264,6 +264,9 @@ int PanTiltRobot::connect(const string &strSerDevName, int nBaudRate)
 
 int PanTiltRobot::disconnect()
 {
+  // cancel any ongoing asynchronouse task
+  cancelAsyncTask();
+
   // stop and destroy background virtual servo thread
   if( m_pDynaBgThread != NULL )
   {
@@ -307,7 +310,7 @@ int PanTiltRobot::calibrate(bool bForceRecalib)
   PT_TRY_CONN();
 
   // lock the arm
-  freeze();
+  freeze(false);
 
   m_eOpState = PanTiltOpStateUncalibrated;
 
@@ -340,14 +343,14 @@ int PanTiltRobot::calibrate(bool bForceRecalib)
   m_eOpState = detRobotOpState();
 
   // arm is calibrated
-  gotoZeroPtPos();
+  gotoZeroPtPos(false);
 
   LOGDIAG1("Pan-Tilt calibrated.");
 
-  return PT_OK;
+  return rc;
 }
 
-int PanTiltRobot::gotoZeroPtPos()
+int PanTiltRobot::gotoZeroPtPos(bool bOverride)
 {
   PanTiltJointTrajectoryPoint trajPoint;
   MapRobotJoints::iterator    iter;
@@ -371,15 +374,15 @@ int PanTiltRobot::gotoZeroPtPos()
     switch( nMasterServoId )
     {
       case PanTiltServoIdPan:
-        trajPoint.append(pJoint->m_strName, pJoint->m_fCalibPosRads, 5.0);
+        trajPoint.append(pJoint->m_strName, pJoint->m_fCalibPosRads, 25.0);
         break;
       case PanTiltServoIdTilt:
-        trajPoint.append(pJoint->m_strName, pJoint->m_fCalibPosRads, 5.0);
+        trajPoint.append(pJoint->m_strName, pJoint->m_fCalibPosRads, 25.0);
         break;
     }
   }
 
-  if( (rc = move(trajPoint)) < 0 )
+  if( (rc = move(trajPoint, bOverride)) < 0 )
   {
     LOGERROR("Move to pre-defined calibrated zero point position failed.");
   }
@@ -393,27 +396,184 @@ int PanTiltRobot::gotoZeroPtPos()
 
 int PanTiltRobot::pan(double fMinPos, double fMaxPos, double fVelocity)
 {
+  string                      strPan("pan");
+  PanTiltRobotJoint           *pJoint;
   PanTiltJointTrajectoryPoint *pTraj;
+  int                          rc;
 
   PT_TRY_CONN();
   PT_TRY_CALIB();
   PT_TRY_NOT_ESTOP();
 
+  pJoint = getJoint(strPan);
+
+  // cap
+  if( fMinPos < pJoint->m_fMinSoftLimitRads )
+  {
+    fMinPos = pJoint->m_fMinSoftLimitRads;
+  }
+
+  if( fMaxPos > pJoint->m_fMaxSoftLimitRads )
+  {
+    fMaxPos = pJoint->m_fMaxSoftLimitRads;
+  }
+
+  if( fMinPos >= fMaxPos )
+  {
+    LOGERROR("Minimum pan position %lf >= maximum pan position %lf.",
+        degToRad(fMinPos), degToRad(fMaxPos));
+    return -PT_ECODE_BAD_VAL;
+  }
+
+  if( fVelocity < 2.0 )
+  {
+    LOGERROR("Pan velocity %lf to small.", fVelocity);
+    return -PT_ECODE_BAD_VAL;
+  }
+
+  // cancel any ongoing asynchronouse task
   cancelAsyncTask();
 
   m_lastTraj.clear();
 
   pTraj = new PanTiltJointTrajectoryPoint[2];
 
+  pTraj[0].append("pan", fMinPos, fVelocity, 0.0);
+  pTraj[1].append("pan", fMaxPos, fVelocity, 0.0);
+
   m_eAsyncTaskId  = AsyncTaskIdPan;
   m_pAsyncTaskArg = (void *)pTraj;
 
-  return createAsyncThread();
+  if( (rc = createAsyncThread()) != PT_OK )
+  {
+    delete[] pTraj;
+  }
+
+  return rc;
+}
+
+int PanTiltRobot::sweep(double fPanMinPos,  double fPanMaxPos,  double fPanVel,
+                        double fTiltMinPos, double fTiltMaxPos, double fTiltVel)
+{
+  string                      strPan("pan");
+  string                      strTilt("pan");
+  PanTiltRobotJoint           *pJoint;
+  PanTiltJointTrajectoryPoint *pTraj;
+  int                          rc;
+
+  PT_TRY_CONN();
+  PT_TRY_CALIB();
+  PT_TRY_NOT_ESTOP();
+
+  //
+  // Cap and verify pan limits.
+  //
+  pJoint = getJoint(strPan);
+
+  if( fPanMinPos < pJoint->m_fMinSoftLimitRads )
+  {
+    fPanMinPos = pJoint->m_fMinSoftLimitRads;
+  }
+
+  if( fPanMaxPos > pJoint->m_fMaxSoftLimitRads )
+  {
+    fPanMaxPos = pJoint->m_fMaxSoftLimitRads;
+  }
+
+  if( fPanMinPos >= fPanMaxPos )
+  {
+    LOGERROR("Minimum pan position %lf >= maximum pan position %lf.",
+        degToRad(fPanMinPos), degToRad(fPanMaxPos));
+    return -PT_ECODE_BAD_VAL;
+  }
+
+  if( fPanVel < 2.0 )
+  {
+    LOGERROR("Pan velocity %lf to small.", fPanVel);
+    return -PT_ECODE_BAD_VAL;
+  }
+
+  //
+  // Cap and verify tilt limits.
+  //
+  pJoint = getJoint(strTilt);
+
+  // cap tilt
+  if( fTiltMinPos < pJoint->m_fMinSoftLimitRads )
+  {
+    fTiltMinPos = pJoint->m_fMinSoftLimitRads;
+  }
+
+  if( fTiltMaxPos > pJoint->m_fMaxSoftLimitRads )
+  {
+    fTiltMaxPos = pJoint->m_fMaxSoftLimitRads;
+  }
+
+  if( fTiltMinPos >= fTiltMaxPos )
+  {
+    LOGERROR("Minimum tilt position %lf >= maximum pan position %lf.",
+        degToRad(fTiltMinPos), degToRad(fTiltMaxPos));
+    return -PT_ECODE_BAD_VAL;
+  }
+
+  if( fTiltVel < 2.0 )
+  {
+    LOGERROR("Tilt velocity %lf to small.", fTiltVel);
+    return -PT_ECODE_BAD_VAL;
+  }
+
+  // cancel any ongoing asynchronouse task
+  cancelAsyncTask();
+
+  m_lastTraj.clear();
+
+  double  rv = fTiltVel / fPanVel;
+  double  fPanRange = fPanMaxPos - fPanMinPos;
+  double  fTiltRange = fTiltMaxPos - fTiltMinPos;
+  double  rp = fPanRange / fTiltRange;
+  int     n = (int)(rv * rp + 0.5);
+
+  if( n < 2 )
+  {
+    n = 2;
+  }
+
+  pTraj = new PanTiltJointTrajectoryPoint[n+1];
+
+  double fPanPos, fTiltPos;
+
+  for(int i=0; i<n; ++i)
+  {
+    fPanPos  = fPanMinPos + (double)(i)/(double)(n-1) * fPanRange;
+    fTiltPos = (i & 0x01)? fTiltMaxPos: fTiltMinPos;
+
+    pTraj[i].append("pan",  fPanPos,  fPanVel,  0.0);
+    pTraj[i].append("tilt", fTiltPos, fTiltVel, 0.0);
+
+    //fprintf(stderr, "DBG: %d: pan=%lf, tilt=%lf\n",
+    //    i, radToDeg(fPanPos), radToDeg(fTiltPos));
+  }
+
+  // "null" terminate
+  pTraj[n].append("",  0.0,  0.0,  0.0);
+
+  m_eAsyncTaskId  = AsyncTaskIdSweep;
+  m_pAsyncTaskArg = (void *)pTraj;
+
+  if( (rc = createAsyncThread()) != PT_OK )
+  {
+    delete[] pTraj;
+  }
+
+  return rc;
 }
 
 int PanTiltRobot::estop()
 {
   PT_TRY_CONN();
+
+  // cancel any ongoing asynchronouse task
+  cancelAsyncTask();
 
   m_pDynaChain->EStop();
 
@@ -429,9 +589,15 @@ int PanTiltRobot::estop()
   return PT_OK;
 }
 
-int PanTiltRobot::freeze()
+int PanTiltRobot::freeze(bool bOverride)
 {
   PT_TRY_CONN();
+
+  // cancel any ongoing asynchronouse task
+  if( bOverride )
+  {
+    cancelAsyncTask();
+  }
 
   m_bAreServosPowered = true;
 
@@ -447,6 +613,9 @@ int PanTiltRobot::freeze()
 int PanTiltRobot::release()
 {
   PT_TRY_CONN();
+
+  // cancel any ongoing asynchronouse task
+  cancelAsyncTask();
 
   m_bAreServosPowered = false;
 
@@ -492,7 +661,8 @@ int PanTiltRobot::clearAlarms()
   return PT_OK;
 }
 
-int PanTiltRobot::move(PanTiltJointTrajectoryPoint &trajectoryPoint)
+int PanTiltRobot::move(PanTiltJointTrajectoryPoint &trajectoryPoint,
+                       bool                         bOverride)
 {
   static int      TuneDeltaPos  = 5;  // current-goal identical position delta
 
@@ -513,7 +683,11 @@ int PanTiltRobot::move(PanTiltJointTrajectoryPoint &trajectoryPoint)
   PT_TRY_CALIB();
   PT_TRY_NOT_ESTOP();
 
-  cancelAsyncTask();
+  // this move overrides any existing ongoing asynchronouse task
+  if( bOverride )
+  {
+    cancelAsyncTask();
+  }
 
   // automatically power up servos if not powered
   if( !m_bAreServosPowered )
@@ -595,6 +769,7 @@ int PanTiltRobot::move(PanTiltJointTrajectoryPoint &trajectoryPoint)
     tupSpeedPos[nNumPts].m_nPos     = nOdPos;
     tupSpeedPos[nNumPts].m_nSpeed   = nRawSpeed;
 
+    nNumPts++;
   }
 
   //
@@ -602,6 +777,7 @@ int PanTiltRobot::move(PanTiltJointTrajectoryPoint &trajectoryPoint)
   //
   if( nNumPts > 0 )
   {
+    LOGDIAG3("Move %d joints.", nNumPts);
     rc = m_pDynaChain->SyncMoveAtSpeedTo(tupSpeedPos, (uint_t)nNumPts);
     if( rc < 0 )
     {
@@ -1694,7 +1870,7 @@ void PanTiltRobot::cancelAsyncTask()
     switch( m_eAsyncTaskId )
     {
       case AsyncTaskIdCalibrate:
-        freeze();
+        freeze(false);
         for(iter = m_kin.begin(); iter != m_kin.end(); ++iter)
         {
           if( iter->second.m_eOpState != PanTiltOpStateCalibrated )
@@ -1703,14 +1879,16 @@ void PanTiltRobot::cancelAsyncTask()
             m_eOpState              = PanTiltOpStateUncalibrated;
           }
         }
+        LOGDIAG3("Asychronouse calibration task canceled.");
         break;
       case AsyncTaskIdPan:
       case AsyncTaskIdSweep:
-        freeze();
+        freeze(false);
         if( m_pAsyncTaskArg != NULL )
         {
           delete[] (PanTiltJointTrajectoryPoint *)m_pAsyncTaskArg;
         }
+        LOGDIAG3("Asychronouse pan task canceled.");
         break;
       default:
         break;
@@ -1752,6 +1930,10 @@ void *PanTiltRobot::asyncThread(void *pArg)
     case AsyncTaskIdPan:
       rc = pThis->asyncThExecPan();
       break;
+    // Sweep continuously.
+    case AsyncTaskIdSweep:
+      rc = pThis->asyncThExecSweep();
+      break;
     // Unknown task id.
     default:
       LOGERROR("Unknown async task id = %d.", (int)pThis->m_eAsyncTaskId);
@@ -1778,4 +1960,119 @@ int PanTiltRobot::asyncThExecCalibrate()
 
 int PanTiltRobot::asyncThExecPan()
 {
+  static useconds_t TuneTPan      = 100000;   // 0.1 seconds
+  static useconds_t TuneTPanDir   = 200000;   // 0.2 seconds
+  static double     TuneDeltaPos  = 0.0087;   // 0.5 degrees
+  static double     TuneDeltaVel  = 5.0;      // 5.0 percent
+
+  PanTiltJointTrajectoryPoint  *pTraj;
+  string                        strPan("pan");
+  PanTiltRobotJoint            *pJoint;
+  double                        fTgtPos, fTgtVel, fTgtAccel;
+  double                        fCurPos, fCurVel;
+  useconds_t                    t;
+  int                           i;
+  int                           rc;
+ 
+  pTraj   = (PanTiltJointTrajectoryPoint *)m_pAsyncTaskArg;
+  pJoint  = getJoint(strPan);
+  i       = 0;
+  rc      = PT_OK;
+ 
+  while( rc == PT_OK )
+  {
+    pTraj[i][0].get(strPan, fTgtPos, fTgtVel, fTgtAccel);
+
+    rc = move(pTraj[i], false);
+
+    t = TuneTPanDir;
+
+    do
+    {
+      usleep(t);
+      fCurPos = getCurJointPosition(*pJoint);
+      fCurVel = getCurJointVelocity(*pJoint);
+      t = TuneTPan;
+    } while((fabs(fCurPos - fTgtPos) > TuneDeltaPos) &&
+            (fabs(fCurVel) > TuneDeltaVel));
+
+    i = (i + 1) % 2;
+  }
+
+  return PT_OK;
+}
+
+int PanTiltRobot::asyncThExecSweep()
+{
+  static useconds_t TuneT         = 100000;   // 0.1 seconds
+  static useconds_t TuneTDir      = 200000;   // 0.2 seconds
+  static double     TuneDeltaPos  = 0.0087;   // 0.5 degrees
+  static double     TuneDeltaVel  = 5.0;      // 5.0 percent
+
+  PanTiltJointTrajectoryPoint  *pTraj;
+  string                        strName;
+  PanTiltRobotJoint            *pJoint;
+  double                        fTgtPos, fTgtVel, fTgtAccel;
+  double                        fCurPos, fCurVel;
+  useconds_t                    t;
+  int                           n;
+  int                           sign;
+  int                           i;
+  int                           rc;
+ 
+  pTraj     = (PanTiltJointTrajectoryPoint *)m_pAsyncTaskArg;
+  strName   = "pan";
+  pJoint    = getJoint(strName);
+  sign      = 1;
+  i         = 0;
+  rc        = PT_OK;
+ 
+  // count
+  for(n=0; ; ++n)
+  {
+    pTraj[n][0].get(strName, fTgtPos, fTgtVel, fTgtAccel);
+    if( strName.empty() )
+    {
+      break;
+    }
+  }
+
+  if( n < 2 )
+  {
+    LOGERROR("%d: Too few trajectory points to execute sweep.", n);
+    return -PT_ECODE_BAD_VAL;
+  }
+
+  while( rc == PT_OK )
+  {
+    pTraj[i][0].get(strName, fTgtPos, fTgtVel, fTgtAccel);
+
+    rc = move(pTraj[i], false);
+
+    t = TuneTDir;
+
+    do
+    {
+      usleep(t);
+      fCurPos = getCurJointPosition(*pJoint);
+      fCurVel = getCurJointVelocity(*pJoint);
+      t = TuneT;
+    } while((fabs(fCurPos - fTgtPos) > TuneDeltaPos) &&
+            (fabs(fCurVel) > TuneDeltaVel));
+
+    i += sign;
+
+    if( i == n )
+    {
+      sign = -1;
+      i = n - 1;
+    }
+    else if( i < 0 )
+    {
+      sign = 1;
+      i = 0;
+    }
+  }
+
+  return PT_OK;
 }

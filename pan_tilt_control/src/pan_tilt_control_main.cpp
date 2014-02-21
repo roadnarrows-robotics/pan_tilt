@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
   //
   pantilt.subscribeToTopics();
   
-  ROS_INFO("%s: Subscribed topic registered.", strNodeName.c_str());
+  ROS_INFO("%s: Subscribed topics registered.", strNodeName.c_str());
 
   //
   // Create Action Servers
@@ -178,6 +178,8 @@ int main(int argc, char *argv[])
 
   // set loop rate in Hertz
   ros::Rate loop_rate(5);
+
+  ROS_INFO("%s: Ready.", strNodeName.c_str());
 
   //
   //

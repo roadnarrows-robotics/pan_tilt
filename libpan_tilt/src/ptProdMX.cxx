@@ -105,14 +105,14 @@ const PanTiltSpecLink_T pan_tilt::PanTiltProdMXSpecLinks[PanTiltProdMXNumLinks] 
 const PanTiltSpecJoint_T  pan_tilt::PanTiltProdMXSpecJoints[PanTiltProdMXDoF] =
 {
   { "pan",
-    PanTiltServoIdPan, DYNA_ID_NONE, PanTiltJointTypeRevolute, 1.0,
+    PanTiltServoIdPan, DYNA_ID_NONE, PanTiltJointTypeContinuous, 1.0,
     -170.0, 170.0, PanTiltLimitTypePhys,
     0.0,
     0, 1
   },
 
   { "tilt",
-    PanTiltServoIdTilt, DYNA_ID_NONE, PanTiltJointTypeRevolute, 1.0,
+    PanTiltServoIdTilt, DYNA_ID_NONE, PanTiltJointTypeContinuous, 1.0,
     -90.0, 90.0, PanTiltLimitTypePhys,
     0.0,
     1, 2
@@ -127,6 +127,6 @@ const PanTiltSpecJoint_T  pan_tilt::PanTiltProdMXSpecJoints[PanTiltProdMXDoF] =
  */
 const PanTiltSpecServo_T pan_tilt::PanTiltProdMXSpecServos[PanTiltProdMXNumServos] =
 {
-  {PanTiltServoIdPan,   true, true, DYNA_DIR_CW,  60.0},
-  {PanTiltServoIdTilt,  true, true, DYNA_DIR_CW,  60.0}
+  {PanTiltServoIdPan,   true, true, DYNA_DIR_CCW,  60.0},
+  {PanTiltServoIdTilt,  true, true, DYNA_DIR_CCW,  60.0}
 };

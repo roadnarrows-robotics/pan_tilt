@@ -90,10 +90,12 @@
 #include "pan_tilt_control/GotoZeroPt.h"
 #include "pan_tilt_control/IsAlarmed.h"
 #include "pan_tilt_control/IsCalibrated.h"
+#include "pan_tilt_control/Pan.h"
 #include "pan_tilt_control/Release.h"
 #include "pan_tilt_control/ResetEStop.h"
 #include "pan_tilt_control/SetRobotMode.h"
 #include "pan_tilt_control/Stop.h"
+#include "pan_tilt_control/Sweep.h"
 
 //
 // ROS generated action servers.
@@ -218,6 +220,9 @@ namespace pan_tilt
     bool isCalibrated(pan_tilt_control::IsCalibrated::Request  &req,
                       pan_tilt_control::IsCalibrated::Response &rsp);
 
+    bool pan(pan_tilt_control::Pan::Request  &req,
+             pan_tilt_control::Pan::Response &rsp);
+
     bool release(pan_tilt_control::Release::Request  &req,
                  pan_tilt_control::Release::Response &rsp);
 
@@ -229,6 +234,9 @@ namespace pan_tilt
 
     bool stop(pan_tilt_control::Stop::Request  &req,
               pan_tilt_control::Stop::Response &rsp);
+
+    bool sweep(pan_tilt_control::Sweep::Request  &req,
+               pan_tilt_control::Sweep::Response &rsp);
 
 
     //..........................................................................

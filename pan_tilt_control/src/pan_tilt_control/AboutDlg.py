@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 ###############################################################################
 #
 #
@@ -16,7 +14,7 @@
 ## $LastChangedDate$
 ## $Rev$
 ##
-## \brief About pan-tilt dialog.
+## \brief Pan-Tilt about dialog.
 ##
 ## \author Daniel Packard (daniel@roadnarrows.com)
 ## \author Robin Knight (robin.knight@roadnarrows.com)
@@ -44,7 +42,7 @@ from pan_tilt_control.Utils import *
 
 
 # ------------------------------------------------------------------------------
-# Class aboutDlg
+# Class AboutDlg
 # ------------------------------------------------------------------------------
 
 #
@@ -322,6 +320,3 @@ a global community of users and developers."""
   #
   def close(self):
     self.destroy()
-
-
-

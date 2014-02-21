@@ -88,10 +88,12 @@
 #include "pan_tilt_control/GotoZeroPt.h"
 #include "pan_tilt_control/IsAlarmed.h"
 #include "pan_tilt_control/IsCalibrated.h"
+#include "pan_tilt_control/Pan.h"
 #include "pan_tilt_control/Release.h"
 #include "pan_tilt_control/ResetEStop.h"
 #include "pan_tilt_control/SetRobotMode.h"
 #include "pan_tilt_control/Stop.h"
+#include "pan_tilt_control/Sweep.h"
 
 //
 // ROS generated action servers.
@@ -172,6 +174,11 @@ void PanTiltControl::advertiseServices()
                                           &PanTiltControl::isCalibrated,
                                           &(*this));
 
+  strSvc = "pan";
+  m_services[strSvc] = m_nh.advertiseService(strSvc,
+                                          &PanTiltControl::pan,
+                                          &(*this));
+
   strSvc = "release";
   m_services[strSvc] = m_nh.advertiseService(strSvc,
                                           &PanTiltControl::release,
@@ -190,6 +197,11 @@ void PanTiltControl::advertiseServices()
   strSvc = "stop";
   m_services[strSvc] = m_nh.advertiseService(strSvc,
                                           &PanTiltControl::stop,
+                                          &(*this));
+
+  strSvc = "sweep";
+  m_services[strSvc] = m_nh.advertiseService(strSvc,
+                                          &PanTiltControl::sweep,
                                           &(*this));
 }
 
@@ -277,6 +289,20 @@ bool PanTiltControl::isCalibrated(IsCalibrated::Request  &req,
   return true;
 }
 
+bool PanTiltControl::pan(Pan::Request  &req,
+                         Pan::Response &rsp)
+{
+  int   rc;
+
+  ROS_DEBUG("pan");
+
+  rc = m_robot.pan(req.min_pos, req.max_pos, req.velocity);
+
+  ROS_INFO("Panning from %lf to %lf.", req.min_pos, req.max_pos);
+
+  return rc == PT_OK? true: false;
+}
+
 bool PanTiltControl::release(Release::Request  &req,
                              Release::Response &rsp)
 {
@@ -317,6 +343,22 @@ bool PanTiltControl::stop(Stop::Request  &req,
   // future m_robot.stop();
 
   return true;
+}
+
+bool PanTiltControl::sweep(Sweep::Request  &req,
+                           Sweep::Response &rsp)
+{
+  int   rc;
+
+  ROS_DEBUG("sweep");
+
+  rc = m_robot.sweep(req.pan_min_pos, req.pan_max_pos, req.pan_velocity,
+                     req.tilt_min_pos, req.tilt_max_pos, req.tilt_velocity);
+
+  ROS_INFO("Sweep from %lf to %lf and %lf to %lf.",
+          req.pan_min_pos, req.pan_max_pos, req.tilt_min_pos, req.tilt_max_pos);
+
+  return rc == PT_OK? true: false;
 }
 
 
@@ -558,7 +600,7 @@ void PanTiltControl::execJointCmd(const trajectory_msgs::JointTrajectory &jt)
     pt.append(jt.joint_names[j],
               jt.points[0].positions[j], 
               jt.points[0].velocities[j]);
-    ROS_INFO("j = %d pos=%2.1f speed=%2.1f", j, 
+    ROS_INFO("j = %d pos=%5.3f speed=%2.1f", j, 
                                             jt.points[0].positions[j], 
                                             jt.points[0].velocities[j]);
   }

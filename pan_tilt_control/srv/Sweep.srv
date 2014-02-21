@@ -1,0 +1,8 @@
+float64 pan_min_pos
+float64 pan_max_pos
+float64 pan_velocity
+float64 tilt_min_pos
+float64 tilt_max_pos
+float64 tilt_velocity
+---
+int8 rc

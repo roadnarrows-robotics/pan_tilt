@@ -127,6 +127,6 @@ const PanTiltSpecJoint_T  pan_tilt::PanTiltProdAXSpecJoints[PanTiltProdAXDoF] =
  */
 const PanTiltSpecServo_T pan_tilt::PanTiltProdAXSpecServos[PanTiltProdAXNumServos] =
 {
-  {PanTiltServoIdPan,   true,   false, DYNA_DIR_CW,  60.0},
-  {PanTiltServoIdTilt,  true,   false, DYNA_DIR_CW,  60.0}
+  {PanTiltServoIdPan,   true,   false, DYNA_DIR_CCW,  60.0},
+  {PanTiltServoIdTilt,  true,   false, DYNA_DIR_CCW,  60.0}
 };
