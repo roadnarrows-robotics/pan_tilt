@@ -340,7 +340,7 @@ bool PanTiltControl::stop(Stop::Request  &req,
 {
   ROS_DEBUG("stop");
 
-  // future m_robot.stop();
+  m_robot.freeze();
 
   return true;
 }
@@ -600,9 +600,9 @@ void PanTiltControl::execJointCmd(const trajectory_msgs::JointTrajectory &jt)
     pt.append(jt.joint_names[j],
               jt.points[0].positions[j], 
               jt.points[0].velocities[j]);
-    ROS_INFO("j = %d pos=%5.3f speed=%2.1f", j, 
-                                            jt.points[0].positions[j], 
-                                            jt.points[0].velocities[j]);
+    ROS_INFO("%s: pos=%5.3f speed=%2.1f", jt.joint_names[j].c_str(), 
+                                          jt.points[0].positions[j], 
+                                          jt.points[0].velocities[j]);
   }
 
   m_robot.move(pt);

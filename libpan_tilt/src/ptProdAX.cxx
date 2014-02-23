@@ -74,7 +74,8 @@ using namespace pan_tilt;
  *
  * TODO
  */
-const PanTiltSpecLink_T pan_tilt::PanTiltProdAXSpecLinks[PanTiltProdAXNumLinks] =
+const PanTiltSpecLink_T pan_tilt::
+                                PanTiltProdAXSpecLinks[PanTiltProdAXNumLinks] =
 {
   // fixed base to pan
   { "base_fixed",
@@ -102,7 +103,8 @@ const PanTiltSpecLink_T pan_tilt::PanTiltProdAXSpecLinks[PanTiltProdAXNumLinks] 
  * calib_pos(deg)
  * parent_link_idx, child_link_index
  */
-const PanTiltSpecJoint_T  pan_tilt::PanTiltProdAXSpecJoints[PanTiltProdAXDoF] =
+const PanTiltSpecJoint_T  pan_tilt::
+                                  PanTiltProdAXSpecJoints[PanTiltProdAXDoF] =
 {
   { "pan",
     PanTiltServoIdPan, DYNA_ID_NONE, PanTiltJointTypeRevolute, 1.0,
@@ -125,7 +127,8 @@ const PanTiltSpecJoint_T  pan_tilt::PanTiltProdAXSpecJoints[PanTiltProdAXDoF] =
  * \par Data:
  * servo_id, is_master, is_continuous, dir toque_limit(% of max)
  */
-const PanTiltSpecServo_T pan_tilt::PanTiltProdAXSpecServos[PanTiltProdAXNumServos] =
+const PanTiltSpecServo_T pan_tilt::
+                              PanTiltProdAXSpecServos[PanTiltProdAXNumServos] =
 {
   {PanTiltServoIdPan,   true,   false, DYNA_DIR_CCW,  60.0},
   {PanTiltServoIdTilt,  true,   false, DYNA_DIR_CCW,  60.0}

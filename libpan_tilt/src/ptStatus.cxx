@@ -11,7 +11,7 @@
  * $LastChangedDate$
  * $Rev$
  *
- * \brief Pan-Tilt Robot State class implementations.
+ * \brief Pan-Tilt robot status classes implementations.
  *
  * \author Robin Knight     (robin.knight@roadnarrows.com)
  * \author Daniel Packard   (daniel@roadnarrows.com)

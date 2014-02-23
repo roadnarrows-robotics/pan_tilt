@@ -11,8 +11,7 @@
  * $LastChangedDate$
  * $Rev$
  *
- * \brief PanTiltCalib - Pan-Tilt calibration class
- * implementation.
+ * \brief PanTiltCalib - Pan-Tilt calibration class implementation.
  *
  * \author Robin Knight   (robin.knight@roadnarrows.com)
  * \author Daniel Packard (daniel@roadnarrows.com)

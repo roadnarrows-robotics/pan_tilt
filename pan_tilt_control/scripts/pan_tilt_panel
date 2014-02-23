@@ -220,7 +220,8 @@ class window(Frame):
 
     # pantilt logo
     w = Label(self)
-    self.m_icons['pan_tilt_logo'] = self.m_imageLoader.load("icons/icon_pan_tilt_logo.png");
+    self.m_icons['pan_tilt_logo'] = \
+        self.m_imageLoader.load("icons/icon_pan_tilt_logo.png");
     if self.m_icons['pan_tilt_logo']:
       w['image'] = self.m_icons['pan_tilt_logo']
       w['anchor'] = E
@@ -245,7 +246,8 @@ class window(Frame):
     w = self.createButton(wframe, "Calibrate", "icons/icon_calib.png",
                             self.calibrate)
     w.grid(row=row, column=0, sticky=N+E+W)
-    self.m_icons['calibrate_cancel'] = self.m_imageLoader.load("icons/icon_calib_cancel.png")
+    self.m_icons['calibrate_cancel'] = \
+        self.m_imageLoader.load("icons/icon_calib_cancel.png")
     self.m_keysNoMoves.append('calibrate')
 
     # zero point
@@ -311,7 +313,7 @@ class window(Frame):
     wframe['relief'] = 'ridge'
     wframe.grid(row=row, column=0, padx=1, pady=3, sticky=N+W+E)
 
-    width = 18
+    width = 20
     row   = 0
     col   = 0
 
@@ -351,24 +353,6 @@ class window(Frame):
 
     col += 1
 
-    # robot motors status
-    var = StringVar()
-    text, color = self.toMotorsPowered(TriState.FALSE)
-    var.set("Motors: " + text)
-    w = Entry(wframe)
-    w['borderwidth'] = 2
-    w['relief']   = 'flat'
-    w['width']    = width
-    w['textvar']  = var
-    w['fg']       = color
-    w['state']    = 'readonly'
-    #w['relief']   = 'groove'
-    w.grid(row=row, column=col, padx=0, pady=0, sticky=W+E)
-    d = {'val': TriState.ON, 'var': var, 'w': w}
-    self.m_robotStatus['motors'] = d
-
-    col += 1
-
     spacer = Label(wframe, text=' ', width=15)
     spacer.grid(row=row, column=col, padx=0, pady=0, sticky=W+E)
 
@@ -379,12 +363,38 @@ class window(Frame):
     wframe['relief'] = 'flat'
     wframe.grid(row=row, column=col, padx=1, pady=3, sticky=N+E)
 
-    self.m_icons['led_dark']  = self.m_imageLoader.load("icons/icon_led_dark_16.png")
-    self.m_icons['led_green'] = self.m_imageLoader.load("icons/icon_led_green_16.png")
-    self.m_icons['led_red']   = self.m_imageLoader.load("icons/icon_led_red_16.png")
+    self.m_icons['led_dark']  = \
+        self.m_imageLoader.load("icons/icon_led_dark_16.png")
+    self.m_icons['led_green'] = \
+        self.m_imageLoader.load("icons/icon_led_green_16.png")
+    self.m_icons['led_red']   = \
+        self.m_imageLoader.load("icons/icon_led_red_16.png")
 
     row = 0
     col = 0
+
+    # motors powered status
+    w = Label(wframe)
+    w['text']     = 'Motors'
+    w['width']    = width
+    w['justify']  = RIGHT
+    w['anchor']   = E
+    w['relief']   = 'flat'
+    w.grid(row=row, column=col, sticky=E+W)
+    d = {'val': None, 'var': None, 'w': w}
+    self.m_robotStatus['morots_label'] = d
+
+    col += 1
+
+    # motors icon
+    w = Label(wframe)
+    w['image'] = self.m_icons['led_dark']
+    w['justify'] = LEFT
+    w.grid(row=row, column=col, sticky=W+E)
+    d = {'val': TriState.OFF, 'var': None, 'w': w}
+    self.m_robotStatus['motors_led'] = d
+
+    col += 1
 
     # moving status
     w = Label(wframe)
@@ -734,7 +744,8 @@ class window(Frame):
     w = self.createButton(wframe, "ESTOP", "icons/icon_estop.png", self.estop,
                                   fg='red')
     w.grid(row=0, column=0, sticky=N+E+W)
-    self.m_icons['estop_reset'] = self.m_imageLoader.load("icons/icon_estop_reset.png")
+    self.m_icons['estop_reset'] = \
+        self.m_imageLoader.load("icons/icon_estop_reset.png")
 
     # freeze
     w = self.createButton(wframe, "Freeze",
@@ -1327,12 +1338,13 @@ The pan-tilt may fall if not in a stable position.""")
       if not bNoMoves:
         self.updateButtonState(self.m_keysFewMoves, state)
 
-    key = 'motors'
+    key = 'motors_led'
     if self.m_robotStatus[key]['val'] != status.drives_powered.val:
-      text, fg = self.toMotorsPowered(status.drives_powered.val)
       self.m_robotStatus[key]['val'] = status.drives_powered.val
-      self.showEntry(self.m_robotStatus[key]['w'],
-          self.m_robotStatus[key]['var'], "Motors: "+text, fg)
+      if status.drives_powered.val == TriState.ON:
+        self.m_robotStatus[key]['w']['image'] = self.m_icons['led_green'] 
+      else:
+        self.m_robotStatus[key]['w']['image'] = self.m_icons['led_dark'] 
 
     key = 'moving_led'
     if self.m_robotStatus[key]['val'] != status.in_motion.val:

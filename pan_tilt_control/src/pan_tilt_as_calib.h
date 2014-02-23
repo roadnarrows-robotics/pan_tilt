@@ -13,9 +13,10 @@
  * $LastChangedDate: 2013-09-24 16:16:44 -0600 (Tue, 24 Sep 2013) $
  * $Rev: 3334 $
  *
- * \brief Autoplay the next n moves action server class interface.
+ * \brief Pan-Tilt calibration action server class interface.
  *
  * \author Robin Knight (robin.knight@roadnarrows.com)
+ * \author Danial Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
  * (C) 2014  RoadNarrows

@@ -11,7 +11,7 @@
  * $LastChangedDate$
  * $Rev$
  *
- * \brief Joint points and trajectory class interfaces.
+ * \brief Joint points and trajectory classes interfaces.
  *
  * \author Robin Knight   (robin.knight@roadnarrows.com)
  * \author Daniel Packard (daniel@roadnarrows.com)
@@ -410,7 +410,7 @@ namespace pan_tilt
     }
 
   protected:
-    PanTiltJointTrajectoryPoint   m_trajectory[TRAJ_NUMOF];
+    PanTiltJointTrajectoryPoint   m_trajectory[TRAJ_NUMOF]; ///< trajectory pt
   };
 } // namespace pan_tilt
 

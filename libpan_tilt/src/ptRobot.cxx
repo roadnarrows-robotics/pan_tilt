@@ -11,7 +11,7 @@
  * $LastChangedDate$
  * $Rev$
  *
- * \brief PanTiltRobot - the pan-tilt robot class implementation.
+ * \brief The top pan-tilt robot class implementation.
  *
  * \author Robin Knight (robin.knight@roadnarrows.com)
  * \author Daniel Packard (daniel@roadnarrows.com)

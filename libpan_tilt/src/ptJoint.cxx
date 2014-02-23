@@ -11,7 +11,7 @@
  * $LastChangedDate$
  * $Rev$
  *
- * \brief PanTiltRobotJoint- Pan-Tilt Robot Joint Class implementation.
+ * \brief Pan-Tilt robot Joint classes implementations.
  *
  * \author Robin Knight (robin.knight@roadnarrows.com)
  * \author Daniel Packard (daniel@roadnarrows.com)

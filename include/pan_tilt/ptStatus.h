@@ -11,7 +11,7 @@
  * $LastChangedDate$
  * $Rev$
  *
- * \brief PanTiltateros Robot Status classes interface.
+ * \brief PanTiltateros robot status classes interfaces.
  *
  * \author Robin Knight   (robin.knight@roadnarrows.com)
  * \author Daniel Packard (daniel@roadnarrows.com)

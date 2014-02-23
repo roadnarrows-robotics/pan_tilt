@@ -76,12 +76,8 @@ namespace pan_tilt
    * with not obstructions in the workspace prior to executing sequence.
    *
    * \par Move Sequence:
-   * \li End effector open and close limits. (torque determines this range).
-   * \li Wrist rotation top dead center.
-   * \li Wrist pitch clockwise and counter-clockwise limits.
-   * \li Elbow clockwise and counter-clockwise limits.
-   * \li Shoulder clockwise and counter-clockwise limits.
-   * \li Base rotation top dead center.
+   * \li Tilt clockwise and counter-clockwise limits.
+   * \li Pan clockwise and counter-clockwise limits.
    */
   class PanTiltCalib
   {
@@ -124,7 +120,7 @@ namespace pan_tilt
      * at 0\h_deg is fine tuned.
      *
      * When the joint calibration moves are finished, the joint is repositioned
-     * at its new home position.
+     * at its new home zero point position.
      *
      * \par Heuristic:
      *  -# Rotate in minimum direction until torque limit reached.
@@ -145,7 +141,7 @@ namespace pan_tilt
     /*!
      * \brief Move servo to position.
      *
-     * This call blocks until move is complete.
+     * This call blocks until the move is complete.
      *
      * \param pServo      Pointer to servo.
      * \param nOdGoalPos  Goal position in raw odometer units.

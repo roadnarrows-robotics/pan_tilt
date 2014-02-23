@@ -131,48 +131,122 @@ namespace pan_tilt
     /*! map of ROS subscriptions type */
     typedef std::map<std::string, ros::Subscriber> MapSubscriptions;
 
+    /*!
+     * \brief Default initialization constructor.
+     *
+     * \param nh  Bound node handle.
+     */
     PanTiltControl(ros::NodeHandle &nh);
 
+    /*!
+     * \brief Destructor.
+     */
     virtual ~PanTiltControl();
 
+    /*!
+     * \brief Connect to the pan-tilt.
+     *
+     * \param strDev    Serial USB device name.
+     * \param nBaudRate Serial baud rate.
+     *
+     * \copydoc doc_return_std
+     */
     virtual int connect(const std::string &strDev="/dev/ttyUSB0",
                         const int          nBaudRate=1000000)
     {
       return m_robot.connect(strDev, nBaudRate);
     }
 
+    /*!
+     * \brief Disconnect from the pan-tilt.
+     *
+     * \copydoc doc_return_std
+     */
     virtual int disconnect()
     {
       return m_robot.disconnect();
     }
 
+    /*!
+     * \brief Advertise all services.
+     */
     virtual void advertiseServices();
 
+    /*!
+     * \brief Advertise all publishers.
+     *
+     * \param nQueueDepth   Maximum queue depth.
+     */
     virtual void advertisePublishers(int nQueueDepth=10);
 
+    /*!
+     * \brief Subscribe to all topics.
+     *
+     * \param nQueueDepth   Maximum queue depth.
+     */
     virtual void subscribeToTopics(int nQueueDepth=10);
 
+    /*!
+     * \brief Publish.
+     *
+     * Call in main loop.
+     */
     virtual void publish();
 
+    /*!
+     * \brief Get bound node handle.
+     *
+     * \return Node handle.
+     */
     ros::NodeHandle &getNodeHandle()
     {
       return m_nh;
     }
 
+    /*!
+     * \brief Get bound embedded robot instance.
+     *
+     * \return Robot instance.
+     */
     PanTiltRobot &getRobot()
     {
       return m_robot;
     }
 
+    /*!
+     * \brief Update joint state message from current robot joint state.
+     *
+     * \param [in] state  Robot joint state.
+     * \param [out] msg   Joint state message.
+     */
     void updateJointStateMsg(PanTiltJointStatePoint &state,
                              sensor_msgs::JointState &msg);
 
+    /*!
+     * \brief Update extended joint state message from current robot joint
+     * state.
+     *
+     * \param [in] state  Robot joint state.
+     * \param [out] msg   Extended joint state message.
+     */
     void updateExtendedJointStateMsg(PanTiltJointStatePoint &state,
                                      pan_tilt_control::JointStateExtended &msg);
 
+    /*!
+     * \brief Update robot status message from current robot status.
+     *
+     * \param [in] status Robot status.
+     * \param [out] msg   Robot status message.
+     */
     void updateRobotStatusMsg(PanTiltRobotStatus &status,
                               industrial_msgs::RobotStatus &msg);
 
+    /*!
+     * \brief Update extended robot status message from current robot status.
+     *
+     * \param [in] status Robot status.
+     * \param [out] msg   Extended roobt status message.
+     */
     void updateExtendedRobotStatusMsg(PanTiltRobotStatus &status,
                                    pan_tilt_control::RobotStatusExtended &msg);
 
@@ -199,42 +273,146 @@ namespace pan_tilt
     // Service callbacks
     //..........................................................................
 
+    /*!
+     * \brief Clear robot alarms service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool clearAlarms(pan_tilt_control::ClearAlarms::Request  &req,
                      pan_tilt_control::ClearAlarms::Response &rsp);
 
+    /*!
+     * \brief Emergency stop robot service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool estop(pan_tilt_control::EStop::Request  &req,
                pan_tilt_control::EStop::Response &rsp);
 
+    /*!
+     * \brief Freeze (stop) robot service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool freeze(pan_tilt_control::Freeze::Request  &req,
                 pan_tilt_control::Freeze::Response &rsp);
 
+    /*!
+     * \brief Get robot product information service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool getProductInfo(pan_tilt_control::GetProductInfo::Request  &req,
                         pan_tilt_control::GetProductInfo::Response &rsp);
 
+    /*!
+     * \brief Go to robot's zero point (home) position service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool gotoZeroPt(pan_tilt_control::GotoZeroPt::Request  &req,
                     pan_tilt_control::GotoZeroPt::Response &rsp);
 
+    /*!
+     * \brief Test if robot is alarmed service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool isAlarmed(pan_tilt_control::IsAlarmed::Request  &req,
                    pan_tilt_control::IsAlarmed::Response &rsp);
 
+    /*!
+     * \brief Test if robot is calibrated service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool isCalibrated(pan_tilt_control::IsCalibrated::Request  &req,
                       pan_tilt_control::IsCalibrated::Response &rsp);
 
+    /*!
+     * \brief Continuously pan service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool pan(pan_tilt_control::Pan::Request  &req,
              pan_tilt_control::Pan::Response &rsp);
 
+    /*!
+     * \brief Release drive power to robot motors service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool release(pan_tilt_control::Release::Request  &req,
                  pan_tilt_control::Release::Response &rsp);
 
+    /*!
+     * \brief Release robot's emergency stop condition service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool resetEStop(pan_tilt_control::ResetEStop::Request  &req,
                     pan_tilt_control::ResetEStop::Response &rsp);
 
+    /*!
+     * \brief Set robot's manual/auto mode service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool setRobotMode(pan_tilt_control::SetRobotMode::Request  &req,
                       pan_tilt_control::SetRobotMode::Response &rsp);
 
+    /*!
+     * \brief Stop (freeze) robot service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool stop(pan_tilt_control::Stop::Request  &req,
               pan_tilt_control::Stop::Response &rsp);
 
+    /*!
+     * \brief Continuously sweep service callback.
+     *
+     * \param req   Service request.
+     * \param rsp   Service response.
+     *
+     * \return Returns true on success, false on failure.
+     */
     bool sweep(pan_tilt_control::Sweep::Request  &req,
                pan_tilt_control::Sweep::Response &rsp);
 
@@ -243,8 +421,14 @@ namespace pan_tilt
     // Topic Publishers
     //..........................................................................
 
+    /*!
+     * \brief Publish joint state and extended joint state topics.
+     */
     void publishJointState();
 
+    /*!
+     * \brief Publish robot status and extended robot status topics.
+     */
     void publishRobotStatus();
 
 
@@ -252,6 +436,11 @@ namespace pan_tilt
     // Subscribed Topic Callbacks
     //..........................................................................
 
+    /*!
+     * \brief Execute joint trajectory subscibed topic callback.
+     *
+     * \param jt  Joint trajectory message.
+     */
     void execJointCmd(const trajectory_msgs::JointTrajectory &jt);
   };
 

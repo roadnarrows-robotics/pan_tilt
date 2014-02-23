@@ -11,7 +11,7 @@
  * $LastChangedDate$
  * $Rev$
  *
- * \brief PanTiltRobotJoint - Pan-Tilt Robot Joint Class interface.
+ * \brief Pan-Tilt robot joint classes interfaces.
  *
  * \author Robin Knight (robin.knight@roadnarrows.com)
  * \author Daniel Packard (daniel@roadnarrows.com)
