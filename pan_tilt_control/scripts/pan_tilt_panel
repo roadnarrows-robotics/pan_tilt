@@ -214,7 +214,7 @@ class window(Frame):
     # top heading
     w = Label(self)
     w['font']   = ('Helvetica', 16)
-    w['text']   = 'Pan-Tilt Panel'
+    w['text']   = 'Pan-Tilt Control Panel'
     w['anchor'] = CENTER
     w.grid(row=0, column=1, sticky=E+W)
 
@@ -280,7 +280,7 @@ class window(Frame):
     # specify move
     row += 1
     w = self.createButton(wframe, "Specify\nMove",
-                                  "icons/icon_pan_tilt_in_motion.png",
+                                  "icons/icon_pan_tilt_specify.png",
                                   self.specifyMove)
     w.grid(row=row, column=0, sticky=N+E+W)
     self.m_keysFewMoves.append('specify_move')
@@ -489,12 +489,12 @@ class window(Frame):
     for text in ['', '', '',
         ' Position  ',
         ' Odometer  ',
-        '  Encoder  ',
+        ' Encoder   ',
         ' Velocity  ',
-        '   Speed   ',
-        '   Effort  ',
+        '  Speed    ',
+        '  Effort   ',
         'Temperature',
-        '  Voltage  ',
+        ' Voltage   ',
         '']:
       w = Label(wframe, width=width, padx=padx, pady=pady, anchor=W,
           font=helv, text=text)

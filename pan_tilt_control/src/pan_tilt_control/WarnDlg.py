@@ -103,17 +103,19 @@ class WarnDlg(Toplevel):
   ##
   def initData(self, kw):
     self.m_icons          = {}    # must keep loaded icons referenced
+    imageLoader = ImageLoader(py_pkg='pan_tilt_control.images')
     if kw.has_key('title'):
       self.m_title = kw['title']
       del kw['title']
     else:
       self.m_title = "Warning"
     if kw.has_key('image'):
-      imageLoader = ImageLoader(py_pkg='pan_tilt_control.images')
       self.m_icons['image'] = imageLoader.load(kw['image'])
       del kw['image']
     else:
       self.m_icons['image'] = None
+    if self.m_icons['image'] is None:
+      self.m_icons['image'] = imageLoader.load('icons/icon_warning.png')
     if kw.has_key('msg'):
       self.m_msg = kw['msg']
       del kw['msg']
