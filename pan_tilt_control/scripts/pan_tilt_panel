@@ -1615,7 +1615,7 @@ class application():
   ## \brief Constructor.
   #
   def __init__(self):
-    self._Argv0 = __file__
+    self._Argv0 = os.path.basename(__file__)
     self.m_win = None
 
   #
@@ -1634,11 +1634,8 @@ class application():
   def printUsage(self):
     print \
 """
-usage: %s [OPTIONS] <image_dir>
-
-     %s --help
-
-Options and arguments:
+usage: %s [OPTIONS]
+       %s --help
 
 -h, --help                : Display this help and exit.
 """  % (self._Argv0, self._Argv0)
@@ -1656,21 +1653,30 @@ Options and arguments:
     if argv is None:
       argv = sys.argv
 
-    self._Argv0 = kwargs.get('argv0', __file__)
+    self._Argv0 = os.path.basename(kwargs.get('argv0', __file__))
 
     # defaults
-    kwargs['debug'] = 0
+    kwargs['debug']     = False
+    #kwargs['device']    = '/dev/ttyUSB0'
+    #kwargs['baudrate']  = 1000000
 
     # parse command-line options
     try:
-      opts, args = getopt.getopt(argv[1:], "?h",
-          ['help', ''])
+      opts, args = getopt.getopt(argv[1:], "d:b:?h",
+          ['device=', 'baudrate=', 'help', ''])
     except getopt.error, msg:
       raise usage(msg)
     for opt, optarg in opts:
       if opt in ('-h', '--help', '-?'):
         self.printUsage()
         sys.exit(0)
+      #elif opt in ('-d', '--device'):
+      #  kwargs['device'] = optarg;
+      #elif opt in ('-b', '--baudrate'):
+      #  try:
+      #    kwargs['baudrate'] = int(optarg)
+      #  except ValueError:
+      #    raise usage("%s=%s: NaN" % (opt, optarg))
 
     #if len(args) < 1:
     #  self.printUsageErr("No input xml file specified")
@@ -1716,7 +1722,11 @@ Options and arguments:
   def run(self, argv=None, **kwargs):
   
     # parse command-line options and arguments
-    kwargs = self.getOptions(argv, **kwargs)
+    try:
+      kwargs = self.getOptions(argv, **kwargs)
+    except usage, e:
+      print e.msg
+      return 2
 
     # parse application configuration xml file
     xml = ConfigXml()
