@@ -2,7 +2,6 @@
 
 ###############################################################################
 #
-#
 # Package:   RoadNarrows Robotics ROS Pan-Tilt Robot Package
 #
 # Link:      https://github.com/roadnarrows-robotics/pan_tilt
@@ -41,11 +40,6 @@ from Tkinter import *
 from Tkconstants import *
 from tkFileDialog import *
 import tkFont
-
-from PIL import Image, ImageTk
-
-import webbrowser
-import xml.parsers.expat as expat
 
 import roslib; roslib.load_manifest('pan_tilt_control')
 import rospy
@@ -91,9 +85,7 @@ appVersion = '1.0.0'
 
 ## \brief Image search paths.
 imagePath = [
-  "/prj/pkg/Hekateros/share/images",
-  "/usr/local/share/Hekateros/images",
-  "/prj/pkg/appkit/share/images",
+  "/prj/share/appkit/images",
   "/usr/local/share/appkit/images"
 ]
 
@@ -302,7 +294,7 @@ class window(Frame):
   #
   ## \brief Create robot status upper center panel.
   ##
-  ## \param parent  Parent widget
+  ## \param parent  Parent widget.
   ## \param row     Row in parent widget.
   #
   def createRobotStatusPanel(self, parent, row):
@@ -313,14 +305,24 @@ class window(Frame):
     wframe['relief'] = 'ridge'
     wframe.grid(row=row, column=0, padx=1, pady=3, sticky=N+W+E)
 
-    width = 20
+    width = 18
     row   = 0
     col   = 0
 
-    # robot mode status
+    # robot mode field label
+    w = Label(wframe)
+    w['text']     = 'Mode: '
+    w['justify']  = RIGHT
+    w['anchor']   = W
+    w['relief']   = 'flat'
+    w.grid(row=row, column=col, sticky=W)
+
+    col += 1
+
+    # robot mode field
     var = StringVar()
     text, color = self.toRobotMode(RobotMode.AUTO)
-    var.set("Mode: " + text)
+    var.set(text)
     w = Entry(wframe)
     w['borderwidth'] = 2
     w['relief']   = 'flat'
@@ -328,17 +330,26 @@ class window(Frame):
     w['textvar']  = var
     w['fg']       = color
     w['state']    = 'readonly'
-    #w['relief']   = 'groove'
-    w.grid(row=row, column=col, padx=0, pady=0, sticky=W+E)
+    w.grid(row=row, column=col, padx=0, pady=0, sticky=W)
     d = {'val': RobotMode.AUTO, 'var': var, 'w': w}
     self.m_robotStatus['mode'] = d
 
     col += 1
 
-    # robot calibration status
+    # state field label
+    w = Label(wframe)
+    w['text']     = 'State: '
+    w['justify']  = RIGHT
+    w['anchor']   = W
+    w['relief']   = 'flat'
+    w.grid(row=row, column=col, sticky=W)
+
+    col += 1
+
+    # robot state field
     var = StringVar()
     text, color = self.toCalib(TriState.FALSE)
-    var.set("State: " + text)
+    var.set(text)
     w = Entry(wframe)
     w['borderwidth'] = 2
     w['relief']   = 'flat'
@@ -346,8 +357,7 @@ class window(Frame):
     w['textvar']  = var
     w['fg']       = color
     w['state']    = 'readonly'
-    #w['relief']   = 'groove'
-    w.grid(row=row, column=col, padx=0, pady=0, sticky=W+E)
+    w.grid(row=row, column=col, padx=0, pady=0, sticky=W)
     d = {'val': TriState.FALSE, 'var': var, 'w': w}
     self.m_robotStatus['calibration'] = d
 
@@ -382,7 +392,7 @@ class window(Frame):
     w['relief']   = 'flat'
     w.grid(row=row, column=col, sticky=E+W)
     d = {'val': None, 'var': None, 'w': w}
-    self.m_robotStatus['morots_label'] = d
+    self.m_robotStatus['motors_label'] = d
 
     col += 1
 
@@ -524,7 +534,6 @@ class window(Frame):
       w.grid(row=row, column=col, sticky=W)
       col += 1
 
-
   #
   ## \brief Create joint state lower center panel state.
   ##
@@ -547,7 +556,9 @@ class window(Frame):
       w['width'] = width
       w.grid(row=row, column=col, sticky=W)
 
-      # master servo id
+      #
+      # Master servo
+      #
       col += 1
       var = IntVar()
       var.set(ord(joint.master_servo_id[i]))
@@ -740,45 +751,53 @@ class window(Frame):
     wframe['relief'] = 'ridge'
     wframe.grid(row=1, column=2, padx=1, pady=3, sticky=N+W+E)
 
+    row = 0
+
     # estop
     w = self.createButton(wframe, "ESTOP", "icons/icon_estop.png", self.estop,
                                   fg='red')
-    w.grid(row=0, column=0, sticky=N+E+W)
+    w.grid(row=row, column=0, sticky=N+E+W)
     self.m_icons['estop_reset'] = \
         self.m_imageLoader.load("icons/icon_estop_reset.png")
 
     # freeze
+    row += 1
     w = self.createButton(wframe, "Freeze",
                                   "icons/icon_pause.png", self.freeze)
-    w.grid(row=1, column=0, sticky=N+E+W)
+    w.grid(row=row, column=0, sticky=N+E+W)
     self.m_keysNoMoves.append('freeze')
 
     # release
+    row += 1
     w = self.createButton(wframe, "Release",
                                   "icons/icon_stop.png", self.release)
-    w.grid(row=2, column=0, sticky=N+E+W)
+    w.grid(row=row, column=0, sticky=N+E+W)
     self.m_keysNoMoves.append('release')
 
     # clear alarms
+    row += 1
     w = self.createButton(wframe, "Clear\nAlarms",
                                   "icons/icon_alarm.png", self.clearAlarms)
-    w.grid(row=3, column=0, sticky=N+E+W)
+    w.grid(row=row, column=0, sticky=N+E+W)
     self.m_keysNoMoves.append('clear_alarms')
 
     # settings
+    row += 1
     w = self.createButton(wframe, "Settings",
                                   "icons/icon_settings.png", self.settings)
-    w.grid(row=4, column=0, sticky=N+E+W)
+    w.grid(row=row, column=0, sticky=N+E+W)
 
     # info
+    row += 1
     w = self.createButton(wframe, "About",
                                   "icons/icon_info.png", self.about)
-    w.grid(row=5, column=0, sticky=N+E+W)
+    w.grid(row=row, column=0, sticky=N+E+W)
 
     # quit
+    row += 1
     w = self.createButton(wframe, "Quit", "icons/icon_exit.png", self.destroy,
                                   fg='red')
-    w.grid(row=6, column=0, sticky=N+E+W)
+    w.grid(row=row, column=0, sticky=N+E+W)
 
   #
   ## \brief Create gui status bar at bottom of gui window.
@@ -978,7 +997,6 @@ Make sure the workspace is clear of obstructions.""")
       return
     try:
       sweep_forever = rospy.ServiceProxy('pan_tilt_control/sweep', Sweep)
-      # RDK TODO get values from config
       pan_min_pos   = Float64()
       pan_max_pos   = Float64()
       pan_velocity  = Float64()
@@ -1121,7 +1139,7 @@ Make sure the workspace is clear of obstructions.""")
     return jointTrajectory
 
   #
-  ## \brief Move robot along trajectory
+  ## \brief Move robot along trajectory.
   #
   def moveRobot(self, trajectory):
     try:
@@ -1318,7 +1336,7 @@ The pan-tilt may fall if not in a stable position.""")
       text, fg = self.toRobotMode(status.mode.val)
       self.m_robotStatus[key]['val'] = status.mode.val
       self.showEntry(self.m_robotStatus[key]['w'],
-          self.m_robotStatus[key]['var'], "Mode: "+text, fg)
+          self.m_robotStatus[key]['var'], text, fg)
       if bNoMoves:
         state = 'disabled'
       else:
@@ -1330,7 +1348,7 @@ The pan-tilt may fall if not in a stable position.""")
       text, fg = self.toCalib(status.is_calibrated.val)
       self.m_robotStatus[key]['val'] = status.is_calibrated.val
       self.showEntry(self.m_robotStatus[key]['w'],
-          self.m_robotStatus[key]['var'], "State: "+text, fg)
+          self.m_robotStatus[key]['var'], text, fg)
       if status.is_calibrated.val == TriState.TRUE:
         state = 'normal'
       else:
@@ -1502,7 +1520,7 @@ The pan-tilt may fall if not in a stable position.""")
 
   def toRobotMode(self, mode):
     if mode == RobotMode.MANUAL:
-      return ("Manual", fgColors['normal'])
+      return ("Manual", fgColors['warning'])
     elif mode == RobotMode.AUTO:
       return ("Auto", fgColors['normal'])
     else:
@@ -1510,7 +1528,7 @@ The pan-tilt may fall if not in a stable position.""")
 
   def toCalib(self, tristate):
     if tristate == TriState.FALSE:
-      return ("Not calibrated", fgColors['normal'])
+      return ("Uncalibrated", fgColors['error'])
     elif tristate == TriState.TRUE:
       return ("Calibrated", fgColors['normal'])
     else:
@@ -1637,6 +1655,7 @@ class application():
 usage: %s [OPTIONS]
        %s --help
 
+Options and arguments:
 -h, --help                : Display this help and exit.
 """  % (self._Argv0, self._Argv0)
  
@@ -1663,7 +1682,8 @@ usage: %s [OPTIONS]
     # parse command-line options
     try:
       opts, args = getopt.getopt(argv[1:], "d:b:?h",
-          ['device=', 'baudrate=', 'help', ''])
+          ['help', ''])
+          #['device=', 'baudrate=', 'help', ''])
     except getopt.error, msg:
       raise usage(msg)
     for opt, optarg in opts:
