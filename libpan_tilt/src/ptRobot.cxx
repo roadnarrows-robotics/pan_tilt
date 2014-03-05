@@ -720,9 +720,8 @@ int PanTiltRobot::move(PanTiltJointTrajectoryPoint &trajectoryPoint,
     //
     // Check for goal position out of range condition.
     //
-    if( (pJoint->m_eJointType != PanTiltJointTypeContinuous) &&
-        ((fPosition < pJoint->m_fMinSoftLimitRads) ||
-         (fPosition > pJoint->m_fMaxSoftLimitRads)) )
+    if( (fPosition < pJoint->m_fMinSoftLimitRads) ||
+        (fPosition > pJoint->m_fMaxSoftLimitRads) )
     {
       LOGDIAG3("Joint %s (servo=%d): Goal position %.02lf: Out of range.",
           pJoint->m_strName.c_str(), pJoint->m_nMasterServoId,
