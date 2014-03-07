@@ -78,6 +78,10 @@
 using namespace ::std;
 using namespace pan_tilt;
 
+//. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+// Node Specific Defines and Data
+//. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+
 //
 // Application exit codes
 //
@@ -85,11 +89,19 @@ using namespace pan_tilt;
 #define APP_EC_INIT 2   ///< initialization fatal error
 #define APP_EC_EXEC 4   ///< execution fatal error
 
+//
+// Data
+//
 const char *NodeName = "pan_tilt_control";  ///< this ROS node's name
 
-//------------------------------------------------------------------------------
-// RoadNarrows Specific Data
-//------------------------------------------------------------------------------
+
+//. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+// RoadNarrows Specific Defines and Data
+//. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
+
+//
+// Options
+//
 static char  *OptsDevice    = (char *)"/dev/ttyUSB0";   ///< device name
 static int    OptsBaudRate  = 1000000;                  ///< baud rate
 
