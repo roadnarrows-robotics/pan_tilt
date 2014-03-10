@@ -6,7 +6,7 @@
 //
 // ROS Node:  pan_tilt_control
 //
-// File:      pan_tilt_control.cpp
+// File:      pan_tilt_control.h
 //
 /*! \file
  *
