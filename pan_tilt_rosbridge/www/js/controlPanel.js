@@ -1,7 +1,7 @@
 window.setInterval(function ()
           {
             updateData();
-          },800)
+          },500)
 
 var calibrate_action_goal;
 var robotState;
@@ -382,7 +382,8 @@ function aboutOverlay()
             + "<br/>" +
             "HW Version:  " + "&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;                                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"                               + HWVersion   
             + "<br/>" +
-            "App Version: " + "&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;                                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"                                      + AppVersion  
+            "App Version: " + "&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;                                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"                               + AppVersion  
+            
             + "<br/>" +
             "URL:         " + "&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"+ URL                     
             + "<br/>" +
@@ -398,7 +399,9 @@ function ClearAlarms()
 {
   console.info("Clear Alarms");
   d3.select("box").text("pan-tilt alarms cleared.");
-  pan.clearalarms();
+  data[0]["Alarms"] = "OK";
+  data[1]["Alarms"] = "OK";
+  pan.clearAlarms();
 }
 
 d3.select("main").select("table").text("here")
@@ -414,35 +417,35 @@ var rows;
 var cells;
 var data;
 
-function table() {      
-  columns = ['joint', 'servoid', 'state', 'position', 'odometer', 'encoder', 'velocity', 'speed', 'effort', 'temperature', 'voltage', 'alarms'];
+function Table() {      
+  columns = ['Joint', 'ServoID', 'State', 'Position', 'Odometer', 'Encoder', 'Velocity', 'Speed', 'Effort', 'Temperature', 'Voltage', 'Alarms'];
 table = d3.select("main").append('table');
  data =[
-        {"joint"      : "pan:", 
-         "servoid"    : "na", 
-         "state"      : "na", 
-         "position"   : "na", 
-         "odometer"   : "na", 
-         "encoder"    : "na", 
-         "velocity"   : "na", 
-         "speed"      : "na", 
-         "effort"     : "na", 
-         "temperature": "na", 
-         "voltage"    : "na", 
-         "alarms"     : "na"  },
+        {"Joint"      : "pan:", 
+         "ServoID"    : "na", 
+         "State"      : "na", 
+         "Position"   : "na", 
+         "Odometer"   : "na", 
+         "Encoder"    : "na", 
+         "Velocity"   : "na", 
+         "Speed"      : "na", 
+         "Effort"     : "na", 
+         "Temperature": "na", 
+         "Voltage"    : "na", 
+         "Alarms"     : "OK"  },
 
-        {"joint"      : "tilt:", 
-         "servoid"    : "na", 
-         "state"      : "na", 
-         "position"   : "na", 
-         "odometer"   : "na", 
-         "encoder"    : "na", 
-         "velocity"   : "na", 
-         "speed"      : "na", 
-         "effort"     : "na", 
-         "temperature": "na", 
-         "voltage"    : "na", 
-         "alarms"     : "na"  }
+        {"Joint"      : "tilt:", 
+         "ServoID"    : "na", 
+         "State"      : "na", 
+         "Position"   : "na", 
+         "Odometer"   : "na", 
+         "Encoder"    : "na", 
+         "Velocity"   : "na", 
+         "Speed"      : "na", 
+         "Effort"     : "na", 
+         "Temperature": "na", 
+         "Voltage"    : "na", 
+         "Alarms"     : "OK"  }
         ];
 d3.select("table").call(t);
 
@@ -519,6 +522,7 @@ function updateData() {
   data[0]["Encoder"]    = jointState.encoder_pos[0];
   data[0]["Position"]   = ((180/Math.PI)*(jointState.position[0])).toFixed(2);
   data[0]["Velocity"]   = jointState.velocity[0].toFixed(2);
+  //data[0]["Alarms"]     = "Alarmed"
 
 
   data[1]["ServoID"]    = robotState.servo_health[1].servo_id;
@@ -530,8 +534,8 @@ function updateData() {
   data[1]["Encoder"]    = jointState.encoder_pos[1];
   data[1]["Position"]   = ((180/Math.PI)*(jointState.position[1])).toFixed(2);
   data[1]["Velocity"]   = jointState.velocity[1].toFixed(2);
+  //data[1]["Alarms"]     = "Alarmed"
 
-  
   var i;  
   for(i = 0; i<2; i++)  
   {        
@@ -543,7 +547,7 @@ function updateData() {
     {
       data[i]["State"]="calibrating";
     }          
-    else if(jointState.op_state[i].calib_state == 2)
+    else if(jointState.op_state[0].calib_state == 2 && jointState.op_state[1].calib_state == 2)
     {
       data[i]["State"]="calibrated";
       //set RobotStatus to calibrated
@@ -555,6 +559,17 @@ function updateData() {
           .attr("onclick","Calibrate()");
     }
   }
+  
+  for(i = 0; i<2; i++)
+  {
+    if(robotState.servo_health[i].alarm == 0)
+      data[i]["Alarms"] = "OK";
+    else
+    {
+      data[1]["Alarms"] = "Alarmed";
+      fifth.style("background-image", "url('img/red.png')");
+    }   
+  } 
   
   if(robotState.mode.val == 1)
   {
@@ -624,7 +639,8 @@ function updateData() {
   
   if(robotState.e_stopped.val > 0)
   {
-    sixth.style("background-image", "url('img/green.png')")
+    sixth.style("background-image", "url('img/red.png')")
+    fifth.style("background-image", "url('img/red.png')")
   }
   else
   {
