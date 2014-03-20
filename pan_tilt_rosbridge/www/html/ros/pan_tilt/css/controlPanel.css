@@ -1,0 +1,263 @@
+/*
+ * Style Sheet 
+ * --------------------------------------------
+ */
+
+#controlPanel
+{
+  height: 500px;
+  width:80%;
+  min-width:600px;
+  max-width:1500px;
+  overflow:hidden;
+  margin:10px auto;
+  background:#ccc;
+  position:relative;
+}
+#leftColumn
+{
+  float:left;
+  position:absolute;
+  left:0;
+  bottom:auto;
+  width:135px;
+}
+#rightColumn
+{
+  float:right;
+  position:absolute;
+  right:0;
+  bottom:0;
+  width:135px
+}
+#centerColumn 
+{
+  width:50%;
+  margin: 20px 20%;
+}
+.left, .right, .center 
+{
+  padding:10px;
+  margin:5px;
+  border:5px double #222;
+  border-radius:5px;
+  background-size: contain; 
+  background-repeat:no-repeat;
+  box-shadow: 3px 3px 3px #555;
+  text-shadow: -1px 0 #ccc, 0 1px #ccc, 1px 0 #ccc, 0 -1px #ccc;
+
+}
+#overlay
+{
+  visibility:hidden;
+  position:absolute;
+  left:0px;
+  top:-30px;
+  width:100%;
+  height:100%;
+  z-index:1000;
+}
+#overlay div
+{
+  width:330px;
+  height:420px;
+  margin:40px auto;
+  background-color:#fff;
+  border:5px solid #000;
+  padding:0px 25px 25px 25px;
+  text-align:right;
+  display:block;
+}
+a.close
+{
+    float:right;
+    width:26px;
+    height:26px;
+    background:transparent url(../img/Quit.png);
+    background-repeat:no-repeat;
+    background-size: contain; 
+    margin-top:-445px;
+    margin-right:-35px;
+    cursor:pointer;
+}
+button
+{
+  width:125px;
+  height:55px;
+  display:table;
+}
+topbutton
+{
+  width:75px;
+  height:45px;
+  display:table;
+  text-align:end;
+  background-color:#ccc;
+  padding:5px;
+  margin:5px auto 0px auto;
+  border:5px double #222;
+  border-radius:5px;
+  background-repeat:no-repeat;
+  word-spacing:30px;
+ 
+}
+tablebutton
+{
+  width:80px;
+  height:55px;
+  display:inline-block;
+  background-color:#ccc;
+  text-align:end;
+  border:5px double #222;
+  border-radius:5px;
+  background-repeat:no-repeat;
+  word-spacing:30px;
+  padding-right:5px;
+}
+savebutton
+{
+  width:50px;
+  height:25px;
+  display:inline-block;
+  background-color:#ccc;
+  text-align:center;
+  border:5px double #222;
+  border-radius:5px;
+  padding-right:5px;
+  position:relative;
+}
+imageleft
+{
+  width:125px;
+  height:70px;
+  display:table;
+  margin:5px;
+  background-size:contain;
+  background-repeat:no-repeat;
+}
+imageright
+{
+  width:125px;
+  height:70px;
+  display:table;
+  margin-left:70px;
+  background-size:contain;
+  background-repeat:no-repeat;
+}
+pantilt
+{
+  width:100%;
+  height:15px;
+  display:table;
+  font-size:25px;
+  font-weight:bold;
+  text-align:center;
+  position:relative;
+}
+title
+{
+  width:100%;
+  height:30px;
+  display:table;
+  text-align:center;
+  position:relative;
+  padding:5px;
+  margin:5px;
+  border:5px double #222;
+  border-radius:5px;
+  top:0;
+}
+main
+{
+  width:inherit;
+  display:table;
+  text-align:center;
+  position:absolute;
+  padding:10px;
+  margin:5px;
+  border:5px double #222;
+  border-radius:5px;
+}
+sbar
+{
+  width:95px;
+  height:25px;
+  display:inline-block;
+  padding 10px;
+  margin:5px;
+  background-repeat:no-repeat;
+  text-align:center;
+}
+box
+{
+  width:inherit;
+  height: 10px;
+  position:absolute;
+  display:table;
+  text-align:left;
+  bottom:0;
+  padding:10px;
+  margin:5px;
+  border:5px double #222;
+  border-radius:5px;
+}
+block
+{
+  width:330px;
+  height: 10px;
+  position:absolute;
+  display:table;
+  text-align:left;
+  padding:5px;
+  margin:15px 5px 0px -10px;
+  border:5px double #222;
+  border-radius:5px;
+}
+
+table
+{
+  width:100%;
+  height:inherit;
+  border:1px solid black;
+  text-align:center;
+  margin-bottom:45px;
+}
+td, th
+{
+  padding: .5px 1px;
+}
+th
+{
+  text-align:center;
+  font-size:14px;
+}
+.center
+{
+  background-color:#090
+}
+button:hover
+{
+  cursor:pointer;
+}
+topbutton:hover
+{
+  cursor:pointer;
+}
+tablebutton:hover
+{
+  cursor:pointer;
+}
+savebutton:hover
+{
+  cursor:pointer;
+}
+
+.left:hover
+{
+  background-color:#b00;
+}
+.right:hover
+{
+  background-color:#b00;
+}
+
