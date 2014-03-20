@@ -239,14 +239,14 @@ var SW_MAXPAN_rad;
 var SW_MINTILT_rad; 
 var SW_MAXTILT_rad; 
 
-var SW_VELPAN      = 20;        //Sweep Pan Velocity
-var SW_VELTILT     = 20.0;       //Sweep Tilt Velocity
+var SW_VELPAN      = 20;     //Sweep Pan Velocity
+var SW_VELTILT     = 20.0;   //Sweep Tilt Velocity
 var SW_MINPAN_deg  = -125.0; //Degrees Sweep Minimum Pan Position
 var SW_MAXPAN_deg  = 125.0;  //Degrees Sweep Maximum Pan Position
-var SW_VELPAN      = 20;        //Sweep Pan Velocity
+var SW_VELPAN      = 20;     //Sweep Pan Velocity
 var SW_MINTILT_deg = 10.0;   //Degrees Sweep Minimum Tilt Position
 var SW_MAXTILT_deg = 90.0;   //Degrees Sweep Maximum Tilt Position
-var SW_VELTILT     = 20.0;       //Sweep Tilt Velocity
+var SW_VELTILT     = 20.0;   //Sweep Tilt Velocity
 
 function Sweep()
 {
@@ -329,7 +329,7 @@ function settingOverlay()
       .text("Cancel")
       .attr("onclick","settingOverlay()");
   foo.append("savebutton")
-      .text("Save")
+      .text("OK")
       .attr("onclick","save()");
 }
 
