@@ -54,8 +54,14 @@
  */
 ////////////////////////////////////////////////////////////////////////////////
 
-
+//
+// System
+//
+#include <sys/types.h>
+#include <unistd.h>
+#include <libgen.h>
 #include <string>
+#include <sstream>
 
 //
 // ROS 
@@ -178,6 +184,63 @@ static OptsInfo_T AppOptsInfo[] =
   {NULL, }
 };
 
+
+/*!
+ * \brief Get real device name.
+ *
+ * If the given device name is a symbolic link, the the real device pointed to
+ * by the symbolic link is returned. Others the given device name is returned.
+ *
+ * \param strDevName  Give device name.
+ *
+ * \return String.
+ */
+string getDeviceName(const string &strDevName)
+{
+  char    buf[MAX_PATH+1];
+  ssize_t len;
+
+  //
+  // Symbolic link.
+  //
+  if( (len = readlink(strDevName.c_str(), buf, MAX_PATH)) > 0 )
+  {
+    buf[len] = 0;
+
+    // absollute path
+    if( buf[0] == '/' )
+    {
+      string strRealDevName(buf);
+      return strRealDevName;
+    }
+
+    // relative path
+    else
+    {
+      char          s[strDevName.size()+1];
+      stringstream  ss;
+
+      strcpy(s, strDevName.c_str());
+
+      char *sDirName = dirname(s);
+
+      ss << sDirName << "/" << buf;
+
+      return ss.str();
+    }
+
+  }
+
+  //
+  // Real device.
+  //
+  else
+  {
+    return strDevName;
+  }
+}
+
+
 /*!
  *  \brief ROS pan-tilt control node main.
  *
@@ -189,7 +252,8 @@ static OptsInfo_T AppOptsInfo[] =
 int main(int argc, char *argv[])
 {
   string  strNodeName;  // ROS-given node name
-  int     rc;
+  string  strDevName;   // real device name
+  int     rc;           // return code
 
   // 
   // Initialize the node. Parse the command line arguments and environment to
@@ -230,10 +294,13 @@ int main(int argc, char *argv[])
   //
   PanTiltControl  pantilt(nh);
 
+  // Get real device name (i.e. follow any symbolic link).
+  strDevName = getDeviceName(OptsDevice);
+
   //
   // Connect to the pan-tilt mechanism.
   //
-  if( (rc = pantilt.connect(OptsDevice, OptsBaudRate)) != PT_OK )
+  if( (rc = pantilt.connect(strDevName, OptsBaudRate)) != PT_OK )
   {
     ROS_ERROR_STREAM(strNodeName << ": Failed to connect to pan-tilt.");
     return APP_EC_INIT;
