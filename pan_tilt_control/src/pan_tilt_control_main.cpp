@@ -184,7 +184,6 @@ static OptsInfo_T AppOptsInfo[] =
   {NULL, }
 };
 
-
 /*!
  * \brief Get real device name.
  *
@@ -195,7 +194,7 @@ static OptsInfo_T AppOptsInfo[] =
  *
  * \return String.
  */
-string getDeviceName(const string &strDevName)
+static string getDeviceName(const string &strDevName)
 {
   char    buf[MAX_PATH+1];
   ssize_t len;
