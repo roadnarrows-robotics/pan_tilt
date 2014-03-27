@@ -77,6 +77,11 @@ add_executable(pan_tilt_control
   src/pan_tilt_control_main.cpp
 )
 
+add_executable(pan_tilt_teleop
+  src/pan_tilt_teleop/pan_tilt_teleop.cpp
+  src/pan_tilt_teleop/pan_tilt_teleop_main.cpp
+)
+
 include_directories(
   include 
   ../include
@@ -91,7 +96,13 @@ target_link_libraries(pan_tilt_control
   ${catkin_LIBRARIES}
 )
 
+target_link_libraries(pan_tilt_teleop 
+  ${rnr_LIBRARIES}
+  ${catkin_LIBRARIES}
+)
+
 add_dependencies(pan_tilt_control pan_tilt_control_gencpp)
+add_dependencies(pan_tilt_teleop pan_tilt_control_gencpp)
 
 install(
   PROGRAMS 

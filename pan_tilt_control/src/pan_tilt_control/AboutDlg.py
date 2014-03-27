@@ -38,6 +38,8 @@ from Tkconstants import *
 from tkFileDialog import *
 import tkFont
 
+import webbrowser
+
 from pan_tilt_control.Utils import *
 
 
@@ -115,7 +117,7 @@ class AboutDlg(Toplevel):
     self.m_prodId         = 0x00
     self.m_prodBrief      = "Pan-Tilt Robotic Mechanism"
     self.m_appVer         = "0.0.0"
-    self.m_rnUrl          = "http://www.roadnarrows.com"
+    self.m_rnUrl          = "http://www.roadnarrows.com/PanTilt"
     self.m_rnEmail        = "support@roadnarrows.com"
     self.m_rnTel          = "+1.800.275.9568"
     if kw.has_key('info'):
@@ -232,7 +234,7 @@ class AboutDlg(Toplevel):
     w.grid(row=row, column=1, padx=2, sticky=W)
 
     w = Button(frame)
-    w['text']   = 'www.roadnarrows.com/'
+    w['text']   = 'www.roadnarrows.com//PanTilt'
     w['fg']   = '#aa0000'
     w['activeforeground']   = '#cc0033'
     w['activebackground']   = w['bg']
