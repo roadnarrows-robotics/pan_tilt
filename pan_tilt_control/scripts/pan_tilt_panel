@@ -331,7 +331,7 @@ class window(Frame):
     w['fg']       = color
     w['state']    = 'readonly'
     w.grid(row=row, column=col, padx=0, pady=0, sticky=W)
-    d = {'val': RobotMode.AUTO, 'var': var, 'w': w}
+    d = {'raw': RobotMode.AUTO, 'var': var, 'w': w}
     self.m_robotStatus['mode'] = d
 
     col += 1
@@ -358,7 +358,7 @@ class window(Frame):
     w['fg']       = color
     w['state']    = 'readonly'
     w.grid(row=row, column=col, padx=0, pady=0, sticky=W)
-    d = {'val': TriState.FALSE, 'var': var, 'w': w}
+    d = {'raw': TriState.FALSE, 'var': var, 'w': w}
     self.m_robotStatus['calibration'] = d
 
     col += 1
@@ -391,7 +391,7 @@ class window(Frame):
     w['anchor']   = E
     w['relief']   = 'flat'
     w.grid(row=row, column=col, sticky=E+W)
-    d = {'val': None, 'var': None, 'w': w}
+    d = {'raw': None, 'var': None, 'w': w}
     self.m_robotStatus['motors_label'] = d
 
     col += 1
@@ -401,7 +401,7 @@ class window(Frame):
     w['image'] = self.m_icons['led_dark']
     w['justify'] = LEFT
     w.grid(row=row, column=col, sticky=W+E)
-    d = {'val': TriState.OFF, 'var': None, 'w': w}
+    d = {'raw': TriState.OFF, 'var': None, 'w': w}
     self.m_robotStatus['motors_led'] = d
 
     col += 1
@@ -414,7 +414,7 @@ class window(Frame):
     w['anchor']   = E
     w['relief']   = 'flat'
     w.grid(row=row, column=col, sticky=E+W)
-    d = {'val': None, 'var': None, 'w': w}
+    d = {'raw': None, 'var': None, 'w': w}
     self.m_robotStatus['moving_label'] = d
 
     col += 1
@@ -424,7 +424,7 @@ class window(Frame):
     w['image'] = self.m_icons['led_dark']
     w['justify'] = LEFT
     w.grid(row=row, column=col, sticky=W+E)
-    d = {'val': TriState.OFF, 'var': None, 'w': w}
+    d = {'raw': TriState.OFF, 'var': None, 'w': w}
     self.m_robotStatus['moving_led'] = d
 
     col += 1
@@ -437,7 +437,7 @@ class window(Frame):
     w['anchor']   = E
     w['relief']   = 'flat'
     w.grid(row=row, column=col, sticky=E+W)
-    d = {'val': None, 'var': None, 'w': w}
+    d = {'raw': None, 'var': None, 'w': w}
     self.m_robotStatus['alarms_label'] = d
 
     col += 1
@@ -447,7 +447,7 @@ class window(Frame):
     w['image'] = self.m_icons['led_dark']
     w['justify'] = LEFT
     w.grid(row=row, column=col, sticky=W+E)
-    d = {'val': TriState.OFF, 'var': None, 'w': w}
+    d = {'raw': TriState.OFF, 'var': None, 'w': w}
     self.m_robotStatus['alarms_led'] = d
 
     col += 1
@@ -460,7 +460,7 @@ class window(Frame):
     w['anchor']   = E
     w['relief']   = 'flat'
     w.grid(row=row, column=col, sticky=E)
-    d = {'val': None, 'var': None, 'w': w}
+    d = {'raw': None, 'var': None, 'w': w}
     self.m_robotStatus['estop_label'] = d
 
     col += 1
@@ -470,7 +470,7 @@ class window(Frame):
     w['image'] = self.m_icons['led_dark']
     w['justify'] = LEFT
     w.grid(row=row, column=col, sticky=E)
-    d = {'val': TriState.OFF, 'var': None, 'w': w}
+    d = {'raw': TriState.OFF, 'var': None, 'w': w}
     self.m_robotStatus['estop_led'] = d
 
   #
@@ -559,16 +559,18 @@ class window(Frame):
       #
       # Master servo
       #
+      servoId = ord(joint.master_servo_id[i])
+      
       col += 1
       var = IntVar()
-      var.set(ord(joint.master_servo_id[i]))
+      var.set(servoId)
       w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': servoId, 'var': var, 'w': w}
       self.m_robotJoint[name]['servo_id'] = d
-      self.m_robotServo[ord(joint.master_servo_id[i])] = name
+      self.m_robotServo[servoId] = name
     
       # joint state
       col += 1
@@ -577,7 +579,7 @@ class window(Frame):
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['state'] = d
     
       # position
@@ -588,7 +590,7 @@ class window(Frame):
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['position'] = d
     
       # odometer
@@ -599,7 +601,7 @@ class window(Frame):
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['odometer'] = d
     
       # encoder
@@ -610,7 +612,7 @@ class window(Frame):
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['encoder'] = d
     
       # velocity
@@ -621,7 +623,7 @@ class window(Frame):
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['velocity'] = d
     
       # raw speed
@@ -632,7 +634,7 @@ class window(Frame):
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['speed'] = d
     
       # raw effort
@@ -643,7 +645,7 @@ class window(Frame):
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['effort'] = d
     
       # temperature
@@ -654,7 +656,7 @@ class window(Frame):
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['temperature'] = d
     
       # voltage
@@ -665,7 +667,7 @@ class window(Frame):
                         fg=fgColors['normal'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['voltage'] = d
     
       # alarms
@@ -676,7 +678,7 @@ class window(Frame):
                             fg=fgColors['ok'], state='readonly')
       w['width'] = width
       w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'var': var, 'w': w}
+      d = {'raw': None, 'var': var, 'w': w}
       self.m_robotJoint[name]['alarms'] = d
 
       self.update_idletasks()
@@ -1152,7 +1154,7 @@ Make sure the workspace is clear of obstructions.""")
   ## \brief (Reset) emergency stop callback.
   #
   def estop(self):
-    if self.m_robotStatus['estop_led']['val'] == TriState.FALSE:
+    if self.m_robotStatus['estop_led']['raw'] == TriState.FALSE:
       self.showResetEStop()
       try:
         rospy.wait_for_service("pan_tilt_control/estop", timeout=1)
@@ -1270,6 +1272,8 @@ The pan-tilt may fall if not in a stable position.""")
   def settings(self):
     dlg = ConfigDlg(master=self, config=self.m_config)
     self.m_config = dlg.m_config
+    if dlg.m_saved:
+      self.showInfo("Configuration saved to %s" % (dlg.m_filename))
   
   #
   ## \brief Show about dialog callback.
@@ -1332,9 +1336,9 @@ The pan-tilt may fall if not in a stable position.""")
       bNoMoves = False
 
     key = 'mode'
-    if self.m_robotStatus[key]['val'] != status.mode.val:
+    if self.m_robotStatus[key]['raw'] != status.mode.val:
       text, fg = self.toRobotMode(status.mode.val)
-      self.m_robotStatus[key]['val'] = status.mode.val
+      self.m_robotStatus[key]['raw'] = status.mode.val
       self.showEntry(self.m_robotStatus[key]['w'],
           self.m_robotStatus[key]['var'], text, fg)
       if bNoMoves:
@@ -1344,9 +1348,9 @@ The pan-tilt may fall if not in a stable position.""")
       self.updateButtonState(self.m_keysNoMoves, state)
 
     key = 'calibration'
-    if self.m_robotStatus[key]['val'] != status.is_calibrated.val:
+    if self.m_robotStatus[key]['raw'] != status.is_calibrated.val:
       text, fg = self.toCalib(status.is_calibrated.val)
-      self.m_robotStatus[key]['val'] = status.is_calibrated.val
+      self.m_robotStatus[key]['raw'] = status.is_calibrated.val
       self.showEntry(self.m_robotStatus[key]['w'],
           self.m_robotStatus[key]['var'], text, fg)
       if status.is_calibrated.val == TriState.TRUE:
@@ -1357,32 +1361,32 @@ The pan-tilt may fall if not in a stable position.""")
         self.updateButtonState(self.m_keysFewMoves, state)
 
     key = 'motors_led'
-    if self.m_robotStatus[key]['val'] != status.drives_powered.val:
-      self.m_robotStatus[key]['val'] = status.drives_powered.val
+    if self.m_robotStatus[key]['raw'] != status.drives_powered.val:
+      self.m_robotStatus[key]['raw'] = status.drives_powered.val
       if status.drives_powered.val == TriState.ON:
         self.m_robotStatus[key]['w']['image'] = self.m_icons['led_green'] 
       else:
         self.m_robotStatus[key]['w']['image'] = self.m_icons['led_dark'] 
 
     key = 'moving_led'
-    if self.m_robotStatus[key]['val'] != status.in_motion.val:
-      self.m_robotStatus[key]['val'] = status.in_motion.val
+    if self.m_robotStatus[key]['raw'] != status.in_motion.val:
+      self.m_robotStatus[key]['raw'] = status.in_motion.val
       if status.in_motion.val == TriState.ON:
         self.m_robotStatus[key]['w']['image'] = self.m_icons['led_green'] 
       else:
         self.m_robotStatus[key]['w']['image'] = self.m_icons['led_dark'] 
 
     key = 'alarms_led'
-    if self.m_robotStatus[key]['val'] != status.in_error.val:
-      self.m_robotStatus[key]['val'] = status.in_error.val
+    if self.m_robotStatus[key]['raw'] != status.in_error.val:
+      self.m_robotStatus[key]['raw'] = status.in_error.val
       if status.in_error.val == TriState.TRUE:
         self.m_robotStatus[key]['w']['image'] = self.m_icons['led_red'] 
       else:
         self.m_robotStatus[key]['w']['image'] = self.m_icons['led_dark'] 
 
     key = 'estop_led'
-    if self.m_robotStatus[key]['val'] != status.e_stopped.val:
-      self.m_robotStatus[key]['val'] = status.e_stopped.val
+    if self.m_robotStatus[key]['raw'] != status.e_stopped.val:
+      self.m_robotStatus[key]['raw'] = status.e_stopped.val
       if status.e_stopped.val == TriState.TRUE:
         self.m_robotStatus[key]['w']['image'] = self.m_icons['led_red'] 
       else:
@@ -1404,50 +1408,64 @@ The pan-tilt may fall if not in a stable position.""")
       if not self.m_robotJoint.has_key(name):
         continue
 
+      #
+      # Master servo
+      #
       key = 'state'
-      val, fg = self.toJointState(joint.op_state[i].calib_state)
-      if self.m_robotJoint[name][key]['var'].get() != val:
+      val = joint.op_state[i].calib_state
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
+        text, fg = self.toJointState(val)
         self.showEntry(self.m_robotJoint[name][key]['w'],
-                     self.m_robotJoint[name][key]['var'], val, fg)
+                     self.m_robotJoint[name][key]['var'], text, fg)
 
       key = 'position'
-      val, fg = self.toDeg(joint.position[i])
-      if self.m_robotJoint[name][key]['var'].get() != val:
+      val = joint.position[i]
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
+        pos, fg = self.toDeg(val)
         self.showEntry(self.m_robotJoint[name][key]['w'],
-                     self.m_robotJoint[name][key]['var'], val, fg)
+                     self.m_robotJoint[name][key]['var'], pos, fg)
 
       key = 'odometer'
       val = joint.odometer_pos[i]
-      if self.m_robotJoint[name][key]['var'].get() != val:
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
         self.showEntry(self.m_robotJoint[name][key]['w'],
                      self.m_robotJoint[name][key]['var'],
                      val, fgColors['normal'])
 
       key = 'encoder'
       val = joint.encoder_pos[i]
-      if self.m_robotJoint[name][key]['var'].get() != val:
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
         self.showEntry(self.m_robotJoint[name][key]['w'],
                      self.m_robotJoint[name][key]['var'],
                      val, fgColors['normal'])
 
       key = 'velocity'
-      val, fg = self.toVelocity(joint.velocity[i])
-      if self.m_robotJoint[name][key]['var'].get() != val:
+      val = joint.velocity[i]
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
+        vel, fg = self.toVelocity(joint.velocity[i])
         self.showEntry(self.m_robotJoint[name][key]['w'],
-                     self.m_robotJoint[name][key]['var'], val, fg)
+                     self.m_robotJoint[name][key]['var'], vel, fg)
 
       key = 'speed'
       val = joint.raw_speed[i]
-      if self.m_robotJoint[name][key]['var'].get() != val:
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
         self.showEntry(self.m_robotJoint[name][key]['w'],
                      self.m_robotJoint[name][key]['var'],
                      val, fgColors['normal'])
 
       key = 'effort'
-      val, fg = self.toEffort(joint.effort[i])
-      if self.m_robotJoint[name][key]['var'].get() != val:
+      val = joint.effort[i]
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
+        load, fg = self.toEffort(joint.effort[i])
         self.showEntry(self.m_robotJoint[name][key]['w'],
-                     self.m_robotJoint[name][key]['var'], val, fg)
+                     self.m_robotJoint[name][key]['var'], load, fg)
 
   #
   ## \brief Show servo health.
@@ -1463,24 +1481,28 @@ The pan-tilt may fall if not in a stable position.""")
       name = self.m_robotServo[servo_id]
 
       key = 'temperature'
-      val = int(health[i].temp)
-      if self.m_robotJoint[name][key]['var'].get() != val:
-        fg = self.toTemperatureColor(val)
+      val = health[i].temp
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
+        temp, fg = self.toTemperatureColor(val)
         self.showEntry(self.m_robotJoint[name][key]['w'],
-                       self.m_robotJoint[name][key]['var'], val, fg)
+                       self.m_robotJoint[name][key]['var'], temp, fg)
 
       key = 'voltage'
       val = health[i].voltage
-      if self.m_robotJoint[name][key]['var'].get() != val:
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
         volts, fg = self.toVoltage(val)
         self.showEntry(self.m_robotJoint[name][key]['w'],
                        self.m_robotJoint[name][key]['var'], volts, fg)
 
       key = 'alarms'
-      val, fg = self.toAlarms(health[i].alarm)
-      if self.m_robotJoint[name][key]['var'].get() != val:
+      val = health[i].alarm
+      if self.m_robotJoint[name][key]['raw'] != val:
+        self.m_robotJoint[name][key]['raw'] = val
+        alarms, fg = self.toAlarms(health[i].alarm)
         self.showEntry(self.m_robotJoint[name][key]['w'],
-                       self.m_robotJoint[name][key]['var'], val, fg)
+                       self.m_robotJoint[name][key]['var'], alarms, fg)
 
   #
   ## \brief Show information message on status bar.
@@ -1570,12 +1592,13 @@ The pan-tilt may fall if not in a stable position.""")
       return (raw, fgColors['error'])
 
   def toTemperatureColor(self, temp):
+    raw = int(temp)
     if temp >= 75:
-      return fgColors['error']
+      return (raw, fgColors['error'])
     elif temp >= 60:
-      return fgColors['warning']
+      return (raw, fgColors['warning'])
     else:
-      return fgColors['normal']
+      return (raw, fgColors['normal'])
 
   def toVoltage(self, volts):
     volts = round10th(volts)
@@ -1681,7 +1704,7 @@ Options and arguments:
 
     # parse command-line options
     try:
-      opts, args = getopt.getopt(argv[1:], "d:b:?h",
+      opts, args = getopt.getopt(argv[1:], "?h",
           ['help', ''])
           #['device=', 'baudrate=', 'help', ''])
     except getopt.error, msg:
