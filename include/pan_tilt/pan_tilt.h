@@ -185,9 +185,17 @@ namespace pan_tilt
    *
    * \{
    */
-  // base servo ids
-  static const int PanTiltServoIdPan    = 1;  ///< continuous rotating base
-  static const int PanTiltServoIdTilt   = 2;  ///< left shoulder
+  // standalone default servo id map
+  static const int PanTiltServoIdPan        =  1; ///< pan servo id
+  static const int PanTiltServoIdTilt       =  2; ///< tilt servo id
+
+  // Hekateros connected equipment deck servo id map
+  static const int PanTiltEquipServoIdPan   = 20; ///< pan servo id
+  static const int PanTiltEquipServoIdTilt  = 21; ///< tilt servo id
+
+  // Hekateros connected auxillary base servo id map
+  static const int PanTiltAuxServoIdPan     = 30; ///< pan servo id
+  static const int PanTiltAuxServoIdTilt    = 31; ///< tilt servo id
   /*! \} */
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .

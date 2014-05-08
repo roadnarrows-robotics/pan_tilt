@@ -110,6 +110,8 @@ fgColors = {
   'error':    '#cc0000'
 }
 
+## \brief no servo id
+DYNA_ID_NONE = 255
 
 # ------------------------------------------------------------------------------
 # Class window
@@ -158,13 +160,47 @@ class window(Frame):
     self.m_robotStatus    = {}    # robot status widgets, variables, and values
     self.m_robotJoint     = {}    # robot joint state widgets, variables, etc.
     self.m_robotServo     = {}    # master servo to joint name map
-                                  # calibration state
-    self.m_calibState     = \
-      {
+                                 
+    # calibration state
+    self.m_calibState = {
         'calibrating':  False,    # [not] calibrating
         'ac':           None,     # calibration action client
         'id':           0         # after id
       }
+
+    # joint field table column ordering of field keys
+    self.m_jointFieldOrd = [
+        'joint', 'servo_id', 'state', 'position', 'odometer', 'encoder',
+        'velocity', 'speed', 'effort', 'temperature', 'voltage', 'alarms'
+    ]
+
+    # joint field table format info by field key
+    self.m_jointFieldFmt = {
+        'joint':
+          {'hdr0': '',          'hdr1': 'Joint',      'width': 12,  'align': W},
+        'servo_id':
+          {'hdr0': '',          'hdr1': 'Servo Id',   'width': 8,   'align': E},
+        'state':
+          {'hdr0': '',          'hdr1': 'State',      'width': 12,  'align': W},
+        'position':
+          {'hdr0': 'Position',  'hdr1': '(degrees)',  'width': 12,  'align': E},
+        'odometer':
+          {'hdr0': 'Odometer',  'hdr1': '(ticks)   ', 'width': 12,  'align': E},
+        'encoder':
+          {'hdr0': 'Encoder',   'hdr1': '(ticks)  ',  'width': 12,  'align': E},
+        'velocity':
+          {'hdr0': 'Velocity',  'hdr1': '(%)    ',    'width': 10,  'align': E},
+        'speed':
+          {'hdr0': 'Speed',     'hdr1': '(raw) ',     'width': 6,   'align': E},
+        'effort':
+          {'hdr0': 'Effort',    'hdr1': '(raw) ',     'width': 6,   'align': E},
+        'temperature':
+          {'hdr0': 'Temp',      'hdr1': '(C)  ',      'width': 7,   'align': E},
+        'voltage':
+          {'hdr0': 'Voltage',   'hdr1': '(V)    ',    'width': 7,   'align': E},
+        'alarms':
+          {'hdr0': '',          'hdr1': 'Alarms',     'width': 15,  'align': W}
+    }
 
     if kw.has_key('config'):
       self.m_config = kw['config']
@@ -305,7 +341,7 @@ class window(Frame):
     wframe['relief'] = 'ridge'
     wframe.grid(row=row, column=0, padx=1, pady=3, sticky=N+W+E)
 
-    width = 18
+    width = 12
     row   = 0
     col   = 0
 
@@ -489,49 +525,20 @@ class window(Frame):
     self.m_wJointStateFrame = wframe
 
     helv  = tkFont.Font(family="Helvetica",size=10,weight="bold")
-    width = 12
     padx  = 2
     pady  = 0
     row   = 0
     col   = 0
 
-    # top rows of labels
-    for text in ['', '', '',
-        ' Position  ',
-        ' Odometer  ',
-        ' Encoder   ',
-        ' Velocity  ',
-        '  Speed    ',
-        '  Effort   ',
-        'Temperature',
-        ' Voltage   ',
-        '']:
-      w = Label(wframe, width=width, padx=padx, pady=pady, anchor=W,
-          font=helv, text=text)
-      w.grid(row=row, column=col, sticky=W)
-      col += 1
-
-    helv = tkFont.Font(family="Helvetica",size=10,weight="bold",underline=True)
-    row  = 1
-    col  = 0
-
-    # second rows of labels or units
-    for text in [
-        'Joint      ',
-        'Servo Id   ',
-        'State      ',
-        ' (degrees) ',
-        '  (ticks)  ',
-        '  (ticks)  ',
-        '(% of max) ',
-        '   (raw)   ',
-        '   (raw)   ',
-        '    (C)    ',
-        '  (volts)  ',
-        'Alarms     ']:
-      w = Label(wframe, width=width, padx=padx, pady=pady, anchor=W,
-          font=helv, text=text)
-      w.grid(row=row, column=col, sticky=W)
+    # rows of labels
+    for key in self.m_jointFieldOrd:
+      fmt = self.m_jointFieldFmt[key]
+      w = Label(wframe, padx=padx, pady=pady, font=helv,
+                text=fmt['hdr0'], width=fmt['width'], anchor=fmt['align'])
+      w.grid(row=row, column=col, sticky=fmt['align'])
+      w = Label(wframe, padx=padx, pady=pady, font=helv,
+                text=fmt['hdr1'], width=fmt['width'], anchor=fmt['align'])
+      w.grid(row=row+1, column=col, sticky=fmt['align'])
       col += 1
 
   #
@@ -542,148 +549,311 @@ class window(Frame):
   def createJointStatePanel(self, joint):
     wframe = self.m_wJointStateFrame
 
-    width = 12
+    bgList  = ['#cccccc', '#dddddd']    # row background color list
+    row     = 2                         # starting row number
+    padx    = 0                         # x padding
+    pady    = 0                         # y padding
 
     for i in range(0, len(joint.name)):
       name = joint.name[i]
       self.m_robotJoint[name] = {}
 
-      row = 3 + i;
-      col = 0
+      bg = bgList[i%len(bgList)]
 
       # joint
-      w = Label(wframe, anchor=W, text=name)
-      w['width'] = width
-      w.grid(row=row, column=col, sticky=W)
+      key = 'joint'
+      fmt = self.m_jointFieldFmt[key]
+      col = self.m_jointFieldOrd.index(key)
+      w = Label(wframe, bg=bg,
+                  anchor=fmt['align'], width=fmt['width'], text=name)
+      w.grid(row=row, column=col, sticky=fmt['align'])
 
       #
       # Master servo
       #
       servoId = ord(joint.master_servo_id[i])
-      
-      col += 1
-      var = IntVar()
+
+      # servo id
+      key     = 'servo_id'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = IntVar()
       var.set(servoId)
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': servoId, 'var': var, 'w': w}
-      self.m_robotJoint[name]['servo_id'] = d
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'],  bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': servoId, 'var': var, 'w': w}
       self.m_robotServo[servoId] = name
     
       # joint state
-      col += 1
-      var = StringVar()
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['state'] = d
+      key     = 'state'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = StringVar()
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
     
       # position
-      col += 1
-      var = DoubleVar()
-      var.set(0.0)
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['position'] = d
+      key     = 'position'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = StringVar()
+      var.set('0.00')
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
     
       # odometer
-      col += 1
-      var = IntVar()
+      key     = 'odometer'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = IntVar()
       var.set(0)
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['odometer'] = d
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
     
       # encoder
-      col += 1
-      var = IntVar()
+      key     = 'encoder'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = IntVar()
       var.set(0)
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['encoder'] = d
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
     
       # velocity
-      col += 1
-      var = DoubleVar()
-      var.set(0.0)
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['velocity'] = d
+      key     = 'velocity'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = StringVar()
+      var.set('0.0')
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
     
       # raw speed
-      col += 1
-      var = IntVar()
+      key     = 'speed'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = IntVar()
       var.set(0)
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['speed'] = d
-    
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
+
       # raw effort
-      col += 1
-      var = IntVar()
+      key     = 'effort'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = IntVar()
       var.set(0)
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['effort'] = d
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
     
       # temperature
-      col += 1
-      var = IntVar()
+      key     = 'temperature'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = IntVar()
       var.set(0)
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['temperature'] = d
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
     
       # voltage
-      col += 1
-      var = DoubleVar()
+      key     = 'voltage'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = StringVar()
       var.set(0.0)
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                        fg=fgColors['normal'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['voltage'] = d
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
     
       # alarms
-      col += 1
-      var = StringVar()
+      key     = 'alarms'
+      fmt     = self.m_jointFieldFmt[key]
+      col     = self.m_jointFieldOrd.index(key)
+      justify = self.alignToJustify(fmt['align'])
+      var     = StringVar()
       var.set("ok")
-      w = Entry(wframe, relief='flat', justify=LEFT, textvar=var,
-                            fg=fgColors['ok'], state='readonly')
-      w['width'] = width
-      w.grid(row=row, column=col, padx=1, pady=0, sticky=W)
-      d = {'raw': None, 'var': var, 'w': w}
-      self.m_robotJoint[name]['alarms'] = d
+      w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                            fg=fgColors['ok'], bg=bg, readonlybackground=bg,
+                            width=fmt['width'], state='readonly')
+      w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      self.m_robotJoint[name][key] = {'raw': None, 'var': var, 'w': w}
+
+      #
+      # Slave servo
+      #
+      servoId = ord(joint.slave_servo_id[i])
+
+      if servoId != DYNA_ID_NONE:
+        row += 1
+
+        # joint
+        key = 'joint'
+        fmt = self.m_jointFieldFmt[key]
+        col = self.m_jointFieldOrd.index(key)
+        w = Label(wframe, bg=bg,
+                  anchor=fmt['align'], width=fmt['width'], text='')
+        w.grid(row=row, column=col, sticky=fmt['align'])
+        
+        # servo id
+        key     = 'servo_id'
+        fmt     = self.m_jointFieldFmt[key]
+        col     = self.m_jointFieldOrd.index(key)
+        justify = self.alignToJustify(fmt['align'])
+        var     = IntVar()
+        var.set(servoId)
+        w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+        self.m_robotJoint[name][key+'_s'] = {'raw': servoId, 'var': var, 'w': w}
+        self.m_robotServo[servoId] = name
+    
+        # joint state (n/a)
+        key = 'state'
+        fmt = self.m_jointFieldFmt[key]
+        col = self.m_jointFieldOrd.index(key)
+        w = Entry(wframe, relief='flat',
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+
+        # position (n/a)
+        key = 'position'
+        fmt = self.m_jointFieldFmt[key]
+        col = self.m_jointFieldOrd.index(key)
+        w = Entry(wframe, relief='flat',
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+
+        # odometer (n/a)
+        key = 'odometer'
+        fmt = self.m_jointFieldFmt[key]
+        col = self.m_jointFieldOrd.index(key)
+        w = Entry(wframe, relief='flat',
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+
+        # encoder (n/a)
+        key = 'encoder'
+        fmt = self.m_jointFieldFmt[key]
+        col = self.m_jointFieldOrd.index(key)
+        w = Entry(wframe, relief='flat',
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+
+        # velocity (n/a)
+        key = 'velocity'
+        fmt = self.m_jointFieldFmt[key]
+        col = self.m_jointFieldOrd.index(key)
+        w = Entry(wframe, relief='flat',
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+
+        # raw speed (n/a)
+        key = 'speed'
+        fmt = self.m_jointFieldFmt[key]
+        col = self.m_jointFieldOrd.index(key)
+        w = Entry(wframe, relief='flat',
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+
+        # raw effort (n/a)
+        key = 'effort'
+        fmt = self.m_jointFieldFmt[key]
+        col = self.m_jointFieldOrd.index(key)
+        w = Entry(wframe, relief='flat',
+                        fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                        width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+      
+        # temperature
+        key     = 'temperature'
+        fmt     = self.m_jointFieldFmt[key]
+        col     = self.m_jointFieldOrd.index(key)
+        justify = self.alignToJustify(fmt['align'])
+        var = IntVar()
+        var.set(0)
+        w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                          fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                          width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+        self.m_robotJoint[name][key+'_s'] = {'raw': None, 'var': var, 'w': w}
+      
+        # voltage
+        key     = 'voltage'
+        fmt     = self.m_jointFieldFmt[key]
+        col     = self.m_jointFieldOrd.index(key)
+        justify = self.alignToJustify(fmt['align'])
+        var     = DoubleVar()
+        var.set(0.0)
+        w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                          fg=fgColors['normal'], bg=bg, readonlybackground=bg,
+                          width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+        self.m_robotJoint[name][key+'_s'] = {'raw': None, 'var': var, 'w': w}
+      
+        # alarms
+        key     = 'alarms'
+        fmt     = self.m_jointFieldFmt[key]
+        col     = self.m_jointFieldOrd.index(key)
+        justify = self.alignToJustify(fmt['align'])
+        var     = StringVar()
+        var.set("ok")
+        w = Entry(wframe, relief='flat', justify=justify, textvar=var,
+                              fg=fgColors['ok'], bg=bg, readonlybackground=bg,
+                              width=fmt['width'], state='readonly')
+        w.grid(row=row, column=col, padx=padx, pady=pady, sticky=fmt['align'])
+        self.m_robotJoint[name][key+'_s'] = {'raw': None, 'var': var, 'w': w}
+
+      row += 1
 
       self.update_idletasks()
 
     self.m_bHasJointPanel = True
+
     
   #
   ## \brief Create navigation panel
@@ -1086,46 +1256,42 @@ Make sure the workspace is clear of obstructions.""")
   ## \brief Tilt up.
   #
   def tiltUp(self):
-    pos = self.m_robotJoint['tilt']['position']['var'].get() - 10.0
-    if math.fabs(pos-self.m_posManualTilt) > 0.5:
-      self.m_posManualTilt = pos
-      jointTrajectory = self.makeTrajectory(tilt=[pos, 10.0])
-      self.moveRobot(jointTrajectory)
+    pos = self.m_robotJoint['tilt']['position']['raw'] - degToRad(10.0)
+    self.m_posManualTilt = pos
+    jointTrajectory = self.makeTrajectory(tilt=[pos, 10.0])
+    self.moveRobot(jointTrajectory)
 
   #
   ## \brief Tilt down.
   #
   def tiltDown(self):
-    pos = self.m_robotJoint['tilt']['position']['var'].get() + 10.0
-    if math.fabs(pos-self.m_posManualTilt) > 0.5:
-      self.m_posManualTilt = pos
-      jointTrajectory = self.makeTrajectory(tilt=[pos, 10.0])
-      self.moveRobot(jointTrajectory)
+    pos = self.m_robotJoint['tilt']['position']['raw'] + degToRad(10.0)
+    self.m_posManualTilt = pos
+    jointTrajectory = self.makeTrajectory(tilt=[pos, 10.0])
+    self.moveRobot(jointTrajectory)
 
   #
   ## \brief Pan left.
   #
   def panLeft(self):
-    pos = self.m_robotJoint['pan']['position']['var'].get() + 10.0
-    if math.fabs(pos-self.m_posManualPan) > 0.5:
-      self.m_posManualPan = pos
-      jointTrajectory = self.makeTrajectory(pan=[pos, 10.0])
-      self.moveRobot(jointTrajectory)
+    pos = self.m_robotJoint['pan']['position']['raw'] + degToRad(10.0)
+    self.m_posManualPan = pos
+    jointTrajectory = self.makeTrajectory(pan=[pos, 10.0])
+    self.moveRobot(jointTrajectory)
 
   #
   ## \brief Pan right.
   #
   def panRight(self):
-    pos = self.m_robotJoint['pan']['position']['var'].get() - 10.0
-    if math.fabs(pos-self.m_posManualPan) > 0.5:
-      self.m_posManualPan = pos
-      jointTrajectory = self.makeTrajectory(pan=[pos, 10.0])
-      self.moveRobot(jointTrajectory)
+    pos = self.m_robotJoint['pan']['position']['raw'] - degToRad(10.0)
+    self.m_posManualPan = pos
+    jointTrajectory = self.makeTrajectory(pan=[pos, 10.0])
+    self.moveRobot(jointTrajectory)
 
   #
   ## \brief Make trajectory message from keywords.
   ## 
-  ## \param kw  Keywords: name:[pos, vel] with pos in degrees, and vel in
+  ## \param kw  Keywords: name:[pos, vel] with pos in radians, and vel in
   ##            percent.
   ## \return Return joint trajectory message.
   #
@@ -1135,7 +1301,7 @@ Make sure the workspace is clear of obstructions.""")
     jointTrajectory.points.append(jointTrajPoint)
     for name, tgt in kw.iteritems():
       jointTrajectory.joint_names.append(name)
-      jointTrajPoint.positions.append(degToRad(tgt[0]))
+      jointTrajPoint.positions.append(tgt[0])
       jointTrajPoint.velocities.append(tgt[1])
       jointTrajPoint.accelerations.append(0.0)
     return jointTrajectory
@@ -1467,6 +1633,25 @@ The pan-tilt may fall if not in a stable position.""")
         self.showEntry(self.m_robotJoint[name][key]['w'],
                      self.m_robotJoint[name][key]['var'], load, fg)
 
+      #
+      # Slave servo
+      #
+      #if self.m_robotJoint[name].has_key('servo_id_s'):
+        #key = 'encoder_s'
+        #val = joint.encoder_pos[i]
+        #if self.m_robotJoint[name][key]['raw'] != val:
+        #  self.m_robotJoint[name][key]['raw'] = val
+        #  self.showEntry(self.m_robotJoint[name][key]['w'],
+        #               self.m_robotJoint[name][key]['var'],
+        #               val, fgColors['normal'])
+  
+        #key = 'effort_s'
+        #val, fg = self.toEffort(joint.effort[i])
+        #if self.m_robotJoint[name][key]['raw'] != val:
+        #  self.m_robotJoint[name][key]['raw'] = val
+        #  self.showEntry(self.m_robotJoint[name][key]['w'],
+        #               self.m_robotJoint[name][key]['var'], val, fg)
+
   #
   ## \brief Show servo health.
   ##
@@ -1480,29 +1665,62 @@ The pan-tilt may fall if not in a stable position.""")
 
       name = self.m_robotServo[servo_id]
 
-      key = 'temperature'
-      val = health[i].temp
-      if self.m_robotJoint[name][key]['raw'] != val:
-        self.m_robotJoint[name][key]['raw'] = val
-        temp, fg = self.toTemperatureColor(val)
-        self.showEntry(self.m_robotJoint[name][key]['w'],
-                       self.m_robotJoint[name][key]['var'], temp, fg)
+      #
+      # Master servo
+      #
+      if self.m_robotJoint[name]['servo_id']['raw'] == servo_id:
+        key = 'temperature'
+        val = health[i].temp
+        if self.m_robotJoint[name][key]['raw'] != val:
+          self.m_robotJoint[name][key]['raw'] = val
+          temp, fg = self.toTemperatureColor(val)
+          self.showEntry(self.m_robotJoint[name][key]['w'],
+                         self.m_robotJoint[name][key]['var'], temp, fg)
+  
+        key = 'voltage'
+        val = health[i].voltage
+        if self.m_robotJoint[name][key]['raw'] != val:
+          self.m_robotJoint[name][key]['raw'] = val
+          volts, fg = self.toVoltage(val)
+          self.showEntry(self.m_robotJoint[name][key]['w'],
+                         self.m_robotJoint[name][key]['var'], volts, fg)
+  
+        key = 'alarms'
+        val = health[i].alarm
+        if self.m_robotJoint[name][key]['raw'] != val:
+          self.m_robotJoint[name][key]['raw'] = val
+          alarms, fg = self.toAlarms(val)
+          self.showEntry(self.m_robotJoint[name][key]['w'],
+                         self.m_robotJoint[name][key]['var'], alarms, fg)
 
-      key = 'voltage'
-      val = health[i].voltage
-      if self.m_robotJoint[name][key]['raw'] != val:
-        self.m_robotJoint[name][key]['raw'] = val
-        volts, fg = self.toVoltage(val)
-        self.showEntry(self.m_robotJoint[name][key]['w'],
-                       self.m_robotJoint[name][key]['var'], volts, fg)
-
-      key = 'alarms'
-      val = health[i].alarm
-      if self.m_robotJoint[name][key]['raw'] != val:
-        self.m_robotJoint[name][key]['raw'] = val
-        alarms, fg = self.toAlarms(health[i].alarm)
-        self.showEntry(self.m_robotJoint[name][key]['w'],
-                       self.m_robotJoint[name][key]['var'], alarms, fg)
+      #
+      # Slave servo
+      #
+      elif self.m_robotJoint[name].has_key('servo_id_s') and \
+           self.m_robotJoint[name]['servo_id_s']['raw'] == servo_id:
+        key = 'temperature_s'
+        val = health[i].temp
+        if self.m_robotJoint[name][key]['raw'] != val:
+          self.m_robotJoint[name][key]['raw'] = val
+          temp, fg = self.toTemperatureColor(val)
+          self.showEntry(self.m_robotJoint[name][key]['w'],
+                         self.m_robotJoint[name][key]['var'], temp, fg)
+  
+        key = 'voltage_s'
+        val = health[i].voltage
+        if self.m_robotJoint[name][key]['raw'] != val:
+          self.m_robotJoint[name][key]['raw'] = val
+          volts, fg = self.toVoltage(val)
+          self.showEntry(self.m_robotJoint[name][key]['w'],
+                         self.m_robotJoint[name][key]['var'], volts, fg)
+  
+        key = 'alarms_s'
+        val = health[i].alarm
+        if self.m_robotJoint[name][key]['raw'] != val:
+          self.m_robotJoint[name][key]['raw'] = val
+          alarms, fg = self.toAlarms(health[i].alarm)
+          self.showEntry(self.m_robotJoint[name][key]['w'],
+                         self.m_robotJoint[name][key]['var'], alarms, fg)
 
   #
   ## \brief Show information message on status bar.
@@ -1540,6 +1758,21 @@ The pan-tilt may fall if not in a stable position.""")
     var.set(val)
     w['state'] = 'readonly'
 
+  #
+  ## \brief map alignment value to justify equivalent.
+  ##
+  ## \param align   Alignment
+  ## 
+  ## \return jusity
+  #
+  def alignToJustify(self, align):
+    if align == W:
+      return LEFT
+    elif align == E:
+      return RIGHT
+    else:
+      return CENTER
+
   def toRobotMode(self, mode):
     if mode == RobotMode.MANUAL:
       return ("Manual", fgColors['warning'])
@@ -1576,10 +1809,10 @@ The pan-tilt may fall if not in a stable position.""")
 
   def toDeg(self, rad):
     deg = math.degrees(rad)
-    return round100th(deg), fgColors['normal']
+    return "%.2f" % (deg), fgColors['normal']
 
   def toVelocity(self, percent):
-    return round10th(percent), fgColors['normal']
+    return "%.1f" % (percent), fgColors['normal']
 
   def toEffort(self, effort):
     absraw = math.fabs(effort)
@@ -1601,13 +1834,13 @@ The pan-tilt may fall if not in a stable position.""")
       return (raw, fgColors['normal'])
 
   def toVoltage(self, volts):
-    volts = round10th(volts)
     if volts >= 10.5 and volts <= 13.0:
-      return (volts, fgColors['normal'])
+      fg = fgColors['normal']
     elif volts >= 9.5 and volts <= 13.5:
-      return (volts, fgColors['warning'])
+      fg = fgColors['warning']
     else:
-      return (volts, fgColors['error'])
+      fg = fgColors['error']
+    return "%.1f" % (volts), fg
 
   def toAlarms(self, alarms):
     if alarms == ServoHealth.ALARM_NONE:

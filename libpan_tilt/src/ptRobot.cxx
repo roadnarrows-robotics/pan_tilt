@@ -371,15 +371,7 @@ int PanTiltRobot::gotoZeroPtPos(bool bOverride)
     nMasterServoId  = iter->first;
     pJoint          = &(iter->second);
 
-    switch( nMasterServoId )
-    {
-      case PanTiltServoIdPan:
-        trajPoint.append(pJoint->m_strName, pJoint->m_fCalibPosRads, 25.0);
-        break;
-      case PanTiltServoIdTilt:
-        trajPoint.append(pJoint->m_strName, pJoint->m_fCalibPosRads, 25.0);
-        break;
-    }
+    trajPoint.append(pJoint->m_strName, pJoint->m_fCalibPosRads, 25.0);
   }
 
   if( (rc = move(trajPoint, bOverride)) < 0 )

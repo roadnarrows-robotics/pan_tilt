@@ -87,34 +87,31 @@ PanTiltDesc::PanTiltDesc()
   m_nDoF        = 0;
 }
 
-void PanTiltDesc::setDesc(int           eProdId,
-                          const string &strProdName,
-                          const string &strProdBrief,
-                          const string &strHwVer,
-                          int           nDoF,
-                          int           eProdSize)
-{
-  m_eProdId       = eProdId;
-  m_strProdName   = strProdName.empty()? getProdName(m_eProdId): strProdName;
-  m_strProdBrief  = strProdBrief.empty()? getProdBrief(m_eProdId): strProdBrief;
-  m_strProdHwVer  = strHwVer;
-  m_uProdHwVer    = strToVersion(strHwVer);
-  m_nDoF          = nDoF;
-  m_eProdSize     = eProdSize;
-
-  // set specification
-  m_spec.set(m_eProdId, m_uProdHwVer);
-
-  markAsDescribed();
-}
-
 void PanTiltDesc::setDesc(DynaChain *pDynaChain)
 {
+  int         nServoIdPan;
+  int         nServoIdTilt;
   DynaServo  *pServo;
 
-  if( (pServo = pDynaChain->GetServo(PanTiltServoIdPan)) == NULL )
+  if( (pServo = pDynaChain->GetServo(PanTiltServoIdPan)) != NULL )
   {
-    LOGERROR("Pan servo %d not found.", PanTiltServoIdPan);
+    nServoIdPan  = PanTiltServoIdPan;
+    nServoIdTilt = PanTiltServoIdTilt;
+  }
+  else if( (pServo = pDynaChain->GetServo(PanTiltEquipServoIdPan)) != NULL )
+  {
+    nServoIdPan  = PanTiltEquipServoIdPan;
+    nServoIdTilt = PanTiltEquipServoIdTilt;
+  }
+  else if( (pServo = pDynaChain->GetServo(PanTiltAuxServoIdPan)) != NULL )
+  {
+    nServoIdPan  = PanTiltAuxServoIdPan;
+    nServoIdTilt = PanTiltAuxServoIdTilt;
+  }
+  else
+  {
+    LOGERROR("Pan servo %d|%d|%d not found.",
+        PanTiltServoIdPan, PanTiltEquipServoIdPan, PanTiltAuxServoIdPan);
     return;
   }
 
@@ -140,7 +137,7 @@ void PanTiltDesc::setDesc(DynaChain *pDynaChain)
   m_eProdSize     = getProdSize();
 
   // set specification
-  m_spec.set(m_eProdId, m_uProdHwVer);
+  m_spec.set(m_eProdId, m_uProdHwVer, nServoIdPan, nServoIdTilt);
 
   markAsDescribed();
 }

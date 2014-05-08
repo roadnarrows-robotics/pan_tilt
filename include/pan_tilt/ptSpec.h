@@ -239,10 +239,12 @@ namespace pan_tilt
     /*!
      * \brief Set product fixed specification.
      *
-     * \param eProdId Pan-Tilt product id.
-     * \param uHwVer  Hardware version.
+     * \param eProdId       Pan-Tilt product id.
+     * \param uHwVer        Hardware version.
+     * \param nServoIdPan   Master servo id associated with the pan joint.
+     * \param nServoIdTilt  Master servo id associated with the tilt joint.
      */
-    int set(int eProdId, uint_t uHwVer);
+    int set(int eProdId, uint_t uHwVer, int nServoIdPan, int nServoIdTilt);
 
     /*!
      * \brief Clear product fixed specification.

@@ -83,12 +83,17 @@ PanTiltSpec::~PanTiltSpec()
 {
 }
 
-int PanTiltSpec::set(int eProdId, uint_t uHwVer)
+int PanTiltSpec::set(int    eProdId,
+                     uint_t uHwVer,
+                     int    nServoIdPan,
+                     int    nServoIdTilt)
 {
   const PanTiltSpecLink_T  *pSpecLinks;
   const PanTiltSpecJoint_T *pSpecJoints;
   const PanTiltSpecServo_T *pSpecServos;
-  int                   i;
+  PanTiltSpecJoint_T        specJoint;
+  PanTiltSpecServo_T        specServo;
+  int                       i;
 
   clear();
 
@@ -128,6 +133,9 @@ int PanTiltSpec::set(int eProdId, uint_t uHwVer)
       return -PT_ECODE_BAD_VAL;
   }
 
+  //
+  // Load link specifications
+  //
   if( pSpecLinks != NULL )
   {
     for(i=0; i<m_nNumLinks; ++i)
@@ -136,19 +144,47 @@ int PanTiltSpec::set(int eProdId, uint_t uHwVer)
     }
   }
 
+  // 
+  // Load joint specification making any necessary run-time modifications.
+  //
   if( pSpecJoints != NULL )
   {
     for(i=0; i<m_nDoF; ++i)
     {
-      m_vecSpecJoints.push_back(pSpecJoints[i]);
+      specJoint = pSpecJoints[i];
+
+      if( specJoint.m_strName == "pan" )
+      {
+        specJoint.m_nMasterServoId = nServoIdPan;
+      }
+      else if( specJoint.m_strName == "tilt" )
+      {
+        specJoint.m_nMasterServoId = nServoIdTilt;
+      }
+
+      m_vecSpecJoints.push_back(specJoint);
     }
   }
 
+  // 
+  // Load servo specification making any necessary run-time modifications.
+  //
   if( pSpecServos != NULL )
   {
     for(i=0; i<m_nNumServos; ++i)
     {
-      m_vecSpecServos.push_back(pSpecServos[i]);
+      specServo = pSpecServos[i];
+
+      if( specServo.m_nServoId == PanTiltServoIdPan )
+      {
+        specServo.m_nServoId = nServoIdPan;
+      }
+      else if( specServo.m_nServoId == PanTiltServoIdTilt )
+      {
+        specServo.m_nServoId = nServoIdTilt;
+      }
+
+      m_vecSpecServos.push_back(specServo);
     }
   }
 

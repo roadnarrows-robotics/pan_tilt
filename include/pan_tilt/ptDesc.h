@@ -97,25 +97,6 @@ namespace pan_tilt
     }
   
     /*
-     * Set pan-tilt's description.
-     *
-     * \param eProdId       Pan-Tilt base product id. See \ref PanTiltProdId.
-     * \param strProdName   Product name. If string is empty, then the default
-     *                      name from product id is used.
-     * \param strProdBrief  Product brief. If string is empty, then the default
-     *                      brief from product id is used.
-     * \param strHwVer      Hardware version.
-     * \param nDoF          Degrees of Freedom.
-     * \param eProdSize     Product size. See \ref PanTiltProdSize.
-     */
-    void setDesc(int                eProdId,
-                 const std::string &strProdName="",
-                 const std::string &strProdBrief="",
-                 const std::string &strHwVer="1.0.0",
-                 int                nDoF=0,
-                 int                eProdSize=PanTiltProdSizeUnknown);
-
-    /*
      * Set pan-tilt's description from what is discovered in the scanned
      * Dynamixel chain.
      *

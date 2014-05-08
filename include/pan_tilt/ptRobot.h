@@ -598,6 +598,28 @@ namespace pan_tilt
     }
 
     /*!
+     * \brief Get robotic joint's master servo id.
+     *
+     * \param strName Robotic joint name.
+     *
+     * \return If found, returns master servo id.
+     * Otherwise returns DYNA_ID_NONE.
+     */
+    int getMasterServoId(const std::string &strName)
+    {
+      IMapRobotJoints::iterator  pos;
+
+      if( (pos = m_imapKin.find(strName)) != m_imapKin.end() )
+      {
+        return pos->second;
+      }
+      else
+      {
+        DYNA_ID_NONE;
+      }
+    }
+
+    /*!
      * \brief Convert joint position to servo odometer position.
      *
      * Supported input position units:
@@ -786,8 +808,8 @@ namespace pan_tilt
      */
     int addRobotJoint(PanTiltSpecJoint_T  *pSpecJoint,
                       PanTiltSpecServo_T  *pSpecServo,
-                      MapRobotJoints  &kin,
-                      IMapRobotJoints &imap);
+                      MapRobotJoints      &kin,
+                      IMapRobotJoints     &imap);
 
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -896,9 +918,9 @@ namespace pan_tilt
      *
      * \copydoc doc_return_std
      */
-    int configStateForServo(int           nServoId,
-                            bool          bIsMaster,
-                            bool          bForceRecalib,
+    int configStateForServo(int               nServoId,
+                            bool              bIsMaster,
+                            bool              bForceRecalib,
                             PanTiltRobotJoint &joint);
 
     /*!

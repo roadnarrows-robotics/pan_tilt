@@ -119,11 +119,7 @@ using namespace pan_tilt;
 /*!
  * \brief Calibration order by master servo id.
  */
-static int CalibOrder[] =
-{
-  PanTiltServoIdTilt,
-  PanTiltServoIdPan
-};
+static const char *CalibOrder[] = { "pan", "tilt" };
 
 int PanTiltCalib::calibrate()
 {
@@ -136,7 +132,7 @@ int PanTiltCalib::calibrate()
 
   for(i=0, rc=PT_OK; (i<arraysize(CalibOrder)) && (rc >= 0); ++i)
   {
-    nServoId = CalibOrder[i];
+    nServoId = m_robot.getMasterServoId(CalibOrder[i]);
 
     // no joint in this product version with associated master servo id
     if( (pos = m_robot.m_kin.find(nServoId)) == m_robot.m_kin.end() )
