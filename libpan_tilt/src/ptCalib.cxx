@@ -163,7 +163,7 @@ int PanTiltCalib::calibrate()
 int PanTiltCalib::calibrateJointByTorqueLimits(PanTiltRobotJoint &joint)
 {
   static int    TuneCalSpeed  = 75;     // calibration speed
-  static int    TuneBackoff   = 2;      // backoff position (ticks)
+  static int    TuneBackoff   = 15;     // backoff position (ticks)
 
   int         nServoId;         // servo id
   DynaServo  *pServo;           // joint's master servo
