@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>libpan_tilt</name>
-  <version>0.0.1</version>
+  <version>1.0.0</version>
   <description>Provides real-time control of the pan-tilt robot.</description>
 
   <maintainer email="robin.knight@roadnarrows.com">Robin Knight</maintainer>

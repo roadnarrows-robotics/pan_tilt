@@ -111,7 +111,6 @@
 //
 // Node headers.
 //
-#include "pan_tilt_control.h"
 
 
 namespace pan_tilt

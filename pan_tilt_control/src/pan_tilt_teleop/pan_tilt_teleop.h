@@ -71,7 +71,7 @@
 // Boost
 //
 #include <boost/bind.hpp>
-#include "boost/assign.hpp"
+#include <boost/assign.hpp>
 
 //
 // ROS
