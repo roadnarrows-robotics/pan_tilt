@@ -81,7 +81,7 @@ from pan_tilt_control.ACCalibrate import *
 # ------------------------------------------------------------------------------
 
 ## \brief Application version. Update as needed. 
-appVersion = '1.0.0'
+appVersion = '1.0.1'
 
 ## \brief Image search paths.
 imagePath = [
@@ -1197,7 +1197,7 @@ Make sure the workspace is clear of obstructions.""")
     jointTrajectory.points.append(jointTrajPoint)
     for name,val in self.m_robotJoint.iteritems(): 
       jointTrajectory.joint_names.append(name)
-      pos = self.m_robotJoint[name]['position']['var'].get()
+      pos = self.m_robotJoint[name]['position']['raw']
       jointTrajPoint.positions.append(degToRad(pos))
       jointTrajPoint.velocities.append(10.0)
       jointTrajPoint.accelerations.append(0.0)
@@ -1496,15 +1496,16 @@ The pan-tilt may fall if not in a stable position.""")
   #
   def showRobotStatus(self, status):
     if status.mode.val == RobotMode.MANUAL or \
-      status.e_stopped.val == TriState.TRUE:
+      status.e_stopped.val == TriState.TRUE or \
+      status.is_calibrated.val == TriState.FALSE:
       bNoMoves = True
     else:
       bNoMoves = False
 
     key = 'mode'
     if self.m_robotStatus[key]['raw'] != status.mode.val:
-      text, fg = self.toRobotMode(status.mode.val)
       self.m_robotStatus[key]['raw'] = status.mode.val
+      text, fg = self.toRobotMode(status.mode.val)
       self.showEntry(self.m_robotStatus[key]['w'],
           self.m_robotStatus[key]['var'], text, fg)
       if bNoMoves:
@@ -1515,8 +1516,8 @@ The pan-tilt may fall if not in a stable position.""")
 
     key = 'calibration'
     if self.m_robotStatus[key]['raw'] != status.is_calibrated.val:
-      text, fg = self.toCalib(status.is_calibrated.val)
       self.m_robotStatus[key]['raw'] = status.is_calibrated.val
+      text, fg = self.toCalib(status.is_calibrated.val)
       self.showEntry(self.m_robotStatus[key]['w'],
           self.m_robotStatus[key]['var'], text, fg)
       if status.is_calibrated.val == TriState.TRUE:
@@ -1932,27 +1933,17 @@ Options and arguments:
 
     # defaults
     kwargs['debug']     = False
-    #kwargs['device']    = '/dev/ttyUSB0'
-    #kwargs['baudrate']  = 1000000
 
     # parse command-line options
     try:
       opts, args = getopt.getopt(argv[1:], "?h",
           ['help', ''])
-          #['device=', 'baudrate=', 'help', ''])
     except getopt.error, msg:
       raise usage(msg)
     for opt, optarg in opts:
       if opt in ('-h', '--help', '-?'):
         self.printUsage()
         sys.exit(0)
-      #elif opt in ('-d', '--device'):
-      #  kwargs['device'] = optarg;
-      #elif opt in ('-b', '--baudrate'):
-      #  try:
-      #    kwargs['baudrate'] = int(optarg)
-      #  except ValueError:
-      #    raise usage("%s=%s: NaN" % (opt, optarg))
 
     #if len(args) < 1:
     #  self.printUsageErr("No input xml file specified")
