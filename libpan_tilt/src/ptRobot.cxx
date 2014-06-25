@@ -232,10 +232,10 @@ int PanTiltRobot::connect(const string &strSerDevName, int nBaudRate)
 
   //
   // Create dynamixel background virtual servo thread.
-  //  Execution Cylcle:   10Hz == 100000 usec
+  //  Execution Cylcle:   20Hz == 50000 usec
   //  Position Tolerance: plus/minus 0.2 degrees.
   //
-  m_pDynaBgThread = new DynaBgThread(100000, 0.2);
+  m_pDynaBgThread = new DynaBgThread(50000, 0.2);
 
   // register dynamixel chain with thread
   m_pDynaBgThread->RegisterChainAgent(m_pDynaChain);
