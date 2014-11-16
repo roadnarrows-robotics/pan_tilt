@@ -1,7 +1,7 @@
 Pan-Tilt Packages
 =
 
-![Pan-Tilt Banner](https://github.com/roadnarrows-robotics/pan_tilt/wiki/PanTiltProdBanner.png)
+![Pan-Tilt Banner](https://github.com/roadnarrows-robotics/pan_tilt/wiki/images/PanTiltProdBanner.png)
 
 The RoadNarrows **ROS** enabled, two degree of freedom pan-tilt mount.
 
