@@ -14,10 +14,12 @@ find_package(catkin
 
 find_package(Boost REQUIRED COMPONENTS system)
 
-set(rnr_DIR /usr/local/lib/cmake/rnr)
-find_package(rnr)
+set(rnr-pantilt_DIR /usr/local/lib/cmake/rnr)
+find_package(rnr-pantilt
+  REQUIRED
+)
 
-#message(STATUS, "${rnr_LIBRARIES}")
+#message(STATUS, "${rnr-pantilt_LIBRARIES}")
 
 catkin_package(
   CATKIN_DEPENDS actionlib_msgs
@@ -26,7 +28,7 @@ catkin_package(
 include_directories(
   include 
   ../include
-  ${rnr_INCLUDE_DIRS}
+  ${rnr-pantilt_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
@@ -48,7 +50,7 @@ add_library(pan_tilt
 )
 
 target_link_libraries(pan_tilt 
-  ${rnr_LIBRARIES}
+  ${rnr-pantilt_INCLUDE_DIRS}
 )
 
 install(TARGETS pan_tilt
