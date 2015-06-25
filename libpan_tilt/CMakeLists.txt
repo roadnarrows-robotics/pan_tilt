@@ -50,7 +50,7 @@ add_library(pan_tilt
 )
 
 target_link_libraries(pan_tilt 
-  ${rnr-pantilt_INCLUDE_DIRS}
+  ${rnr-pantilt_LIBRARIES}
 )
 
 install(TARGETS pan_tilt
