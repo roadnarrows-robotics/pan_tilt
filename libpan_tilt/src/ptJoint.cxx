@@ -17,7 +17,7 @@
  * \author Daniel Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.RoadNarrows.com)
  * \n All Rights Reserved
  */
@@ -91,6 +91,7 @@ PanTiltRobotJoint::PanTiltRobotJoint()
   m_fMaxServoRadsPerSec = 0.0;
   m_fMaxJointRadsPerSec = 0.0;
 
+  m_nEncZeroPos         = 0;
   m_fMinPhyLimitRads    = 0.0;
   m_fMaxPhyLimitRads    = 0.0;
   m_nMinPhyLimitOd      = 0;
@@ -128,6 +129,7 @@ PanTiltRobotJoint::PanTiltRobotJoint(const PanTiltRobotJoint &src)
   m_fMaxServoRadsPerSec = src.m_fMaxServoRadsPerSec;
   m_fMaxJointRadsPerSec = src.m_fMaxJointRadsPerSec;
 
+  m_nEncZeroPos         = src.m_nEncZeroPos;
   m_fMinPhyLimitRads    = src.m_fMinPhyLimitRads;
   m_fMaxPhyLimitRads    = src.m_fMaxPhyLimitRads;
   m_nMinPhyLimitOd      = src.m_nMinPhyLimitOd;
@@ -169,6 +171,7 @@ PanTiltRobotJoint PanTiltRobotJoint::operator=(const PanTiltRobotJoint &rhs)
   m_fMaxServoRadsPerSec = rhs.m_fMaxServoRadsPerSec;
   m_fMaxJointRadsPerSec = rhs.m_fMaxJointRadsPerSec;
 
+  m_nEncZeroPos         = rhs.m_nEncZeroPos;
   m_fMinPhyLimitRads    = rhs.m_fMinPhyLimitRads;
   m_fMaxPhyLimitRads    = rhs.m_fMaxPhyLimitRads;
   m_nMinPhyLimitOd      = rhs.m_nMinPhyLimitOd;

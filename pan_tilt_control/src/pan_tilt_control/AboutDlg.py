@@ -20,7 +20,7 @@
 ## \author Robin Knight (robin.knight@roadnarrows.com)
 ##  
 ## \par Copyright:
-##   (C) 2014.  RoadNarrows LLC.\n
+##   (C) 2014-2015.  RoadNarrows LLC.\n
 ##   (http://www.roadnarrows.com)\n
 ##   All Rights Reserved
 ##
@@ -117,7 +117,7 @@ class AboutDlg(Toplevel):
     self.m_prodId         = 0x00
     self.m_prodBrief      = "Pan-Tilt Robotic Mechanism"
     self.m_appVer         = "0.0.0"
-    self.m_rnUrl          = "http://www.roadnarrows.com/PanTilt"
+    self.m_rnUrl          = "https://github.com/roadnarrows-robotics/pan_tilt"
     self.m_rnEmail        = "support@roadnarrows.com"
     self.m_rnTel          = "+1.800.275.9568"
     if kw.has_key('info'):
@@ -154,14 +154,14 @@ class AboutDlg(Toplevel):
 
     bg      = w['bg']
     lwidth  = 10
-    rwidth  = 26
+    rwidth  = 32
 
     row = 1
 
     # product brief
     w = Text(frame)
     w['wrap']   = WORD
-    w['width']  = lwidth + rwidth + 5
+    w['width']  = lwidth + rwidth
     w['height']  = 3
     w['relief']  = 'flat'
     w['bg']  = bg
@@ -170,19 +170,20 @@ class AboutDlg(Toplevel):
     w.grid(row=row, column=1, columnspan=2, padx=2, sticky=W)
 
     row += 1
+    padx = 1
 
     # product name
     w = Label(frame)
     w['text']   = 'Product:'
     w['anchor'] = W
     w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
+    w.grid(row=row, column=1, padx=padx, sticky=W)
 
     w = Label(frame)
     w['text']   = self.m_prodName
     w['anchor'] = W
     w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
+    w.grid(row=row, column=2, padx=padx, sticky=W)
 
     row += 1
 
@@ -191,13 +192,13 @@ class AboutDlg(Toplevel):
     w['text']   = 'Product Id:'
     w['anchor'] = W
     w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
+    w.grid(row=row, column=1, padx=padx, sticky=W)
 
     w = Label(frame)
     w['text']   = "%08x" % (self.m_prodId)
     w['anchor'] = W
     w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
+    w.grid(row=row, column=2, padx=padx, sticky=W)
 
     row += 1
 
@@ -206,13 +207,13 @@ class AboutDlg(Toplevel):
     w['text']   = 'HW Version:'
     w['anchor'] = W
     w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
+    w.grid(row=row, column=1, padx=padx, sticky=W)
 
     w = Label(frame)
     w['text']   = self.m_hwVer
     w['anchor'] = W
     w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
+    w.grid(row=row, column=2, padx=padx, sticky=W)
 
     row += 1
 
@@ -221,13 +222,13 @@ class AboutDlg(Toplevel):
     w['text']   = 'App Version:'
     w['anchor'] = W
     w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
+    w.grid(row=row, column=1, padx=padx, sticky=W)
 
     w = Label(frame)
     w['text']   = self.m_appVer
     w['anchor'] = W
     w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
+    w.grid(row=row, column=2, padx=padx, sticky=W)
 
     row += 1
 
@@ -236,10 +237,10 @@ class AboutDlg(Toplevel):
     w['text']   = 'URL:'
     w['anchor'] = W
     w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
+    w.grid(row=row, column=1, padx=padx, sticky=W)
 
     w = Button(frame)
-    w['text']   = 'www.roadnarrows.com//PanTilt'
+    w['text'] = 'github.com/roadnarrows-robotics/pan_tilt'
     w['fg']   = '#aa0000'
     w['activeforeground']   = '#cc0033'
     w['activebackground']   = w['bg']
@@ -252,7 +253,7 @@ class AboutDlg(Toplevel):
     w['pady']   = 0
     w['width']  = rwidth
     w['command']  = lambda aurl=self.m_rnUrl:webbrowser.open_new(self.m_rnUrl)
-    w.grid(row=row, column=2, ipadx=0, ipady=0, padx=2, pady=0, sticky=W)
+    w.grid(row=row, column=2, ipadx=0, ipady=0, padx=padx, pady=0, sticky=W)
 
     row += 1
 
@@ -261,13 +262,13 @@ class AboutDlg(Toplevel):
     w['text']   = 'Email:'
     w['anchor'] = W
     w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
+    w.grid(row=row, column=1, padx=padx, sticky=W)
 
     w = Label(frame)
     w['text']   = self.m_rnEmail
     w['anchor'] = W
     w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
+    w.grid(row=row, column=2, padx=padx, sticky=W)
 
     row += 1
 
@@ -276,13 +277,13 @@ class AboutDlg(Toplevel):
     w['text']   = 'Tel:'
     w['anchor'] = W
     w['width'] = lwidth
-    w.grid(row=row, column=1, padx=2, sticky=W)
+    w.grid(row=row, column=1, padx=padx, sticky=W)
 
     w = Label(frame)
     w['text']   = self.m_rnTel
     w['anchor'] = W
     w['width']  = rwidth
-    w.grid(row=row, column=2, padx=2, sticky=W)
+    w.grid(row=row, column=2, padx=padx, sticky=W)
 
     row += 1
 

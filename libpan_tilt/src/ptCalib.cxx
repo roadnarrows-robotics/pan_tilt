@@ -17,7 +17,7 @@
  * \author Daniel Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.RoadNarrows.com)
  * \n All Rights Reserved
  */
@@ -61,6 +61,7 @@
 #include "Dynamixel/DynaServo.h"
 
 #include "pan_tilt/pan_tilt.h"
+#include "pan_tilt/ptXmlCalib.h"
 #include "pan_tilt/ptJoint.h"
 #include "pan_tilt/ptCalib.h"
 #include "pan_tilt/ptRobot.h"
@@ -118,17 +119,180 @@ using namespace pan_tilt;
     } \
   } while(0)
 
-/*!
- * \brief Calibration order by master servo id.
- */
-static const char *CalibOrder[] = { "pan", "tilt" };
+//
+// Fixed calibration data.
+//
+static const char *CalibOrder[] = { "pan", "tilt" };  ///< calibration order
+static int         TuneCalSpeed = 75;                 ///< calibration speed
+static int         TuneBackoff  = 15;                 ///< backoff pos (ticks)
+
+
+int PanTiltCalib::calibrateFromParams(const PanTiltCalibParams &params)
+{
+  PanTiltRobotJoint  *pJoint;
+  int                 i;
+  int                 rc;
+
+  if( !params.m_bIsSpecified )
+  {
+    LOGERROR("Calibration parameters not fully specified.");
+    return -PT_ECODE_BAD_VAL;
+  }
+
+  for(i=0, rc=PT_OK; (i<arraysize(CalibOrder)) && (rc >= 0); ++i)
+  {
+    if( (pJoint = m_robot.getJoint(CalibOrder[i])) == NULL )
+    {
+      LOGERROR("BUG: Joint %s: Cannot find.", CalibOrder[i]);
+      rc = -PT_ECODE_INTERNAL;
+    }
+    else
+    {
+      rc = calibrateJointFromParams(*pJoint, params);
+    }
+
+    pJoint->m_eOpState =  rc == PT_OK? PanTiltOpStateCalibrated:
+                                       PanTiltOpStateUncalibrated;
+  }
+
+  return rc;
+}
+
+int PanTiltCalib::calibrateJointFromParams(PanTiltRobotJoint        &joint,
+                                           const PanTiltCalibParams &params)
+{
+  int         nServoId;     // servo id
+  bool        bIsReverse;   // odometer is [not] reversed
+  int         nSign;        // encoder reverse/normal sign
+  DynaServo  *pServo;       // joint's master servo
+  int         nEncZeroPos;  // encoder zero position
+  int         nOdMinPos;    // encoder minimum odometer position
+  int         nOdMaxPos;    // encoder maximum odometer position
+  int         nDeltaPos;    // working delta position
+  int         nOdGoalPos;   // working goal position
+  int         nOdCurPos;    // working current position
+  int         nServoEncMin; // servo encoder minimum
+  int         nServoEncMax; // servo encoder maximum
+
+  nServoId    = joint.m_nMasterServoId;
+  bIsReverse  = joint.m_nMasterServoDir == DYNA_DIR_CCW? false: true;
+  nSign       = bIsReverse? -1: 1;
+
+  // dynamixel servo object in dynamixel chain
+  PT_TRY_GET_SERVO(nServoId, pServo);
+
+  if( joint.m_strName == "pan" )
+  {
+    nEncZeroPos = params.m_nPanEncZero;
+    nOdMinPos   = params.m_nPanOdMin;
+    nOdMaxPos   = params.m_nPanOdMax;
+  }
+  else if( joint.m_strName == "tilt" )
+  {
+    nEncZeroPos = params.m_nTiltEncZero;
+    nOdMinPos   = params.m_nTiltOdMin;
+    nOdMaxPos   = params.m_nTiltOdMax;
+  }
+  else
+  {
+    LOGERROR("BUG: Joint %s: Unknown.", joint.m_strName.c_str());
+    return -PT_ECODE_INTERNAL;
+  }
+
+  //
+  // Validate parameters.
+  //
+  nServoEncMin = pServo->GetSpecification().m_uRawPosMin;
+  nServoEncMax = pServo->GetSpecification().m_uRawPosMax;
+
+  if( (nEncZeroPos < nServoEncMin) || (nEncZeroPos > nServoEncMax) )
+  {
+    LOGERROR("Joint %s (servo=%d): "
+        "%d: Zero position encoder value out-of-range.",
+      joint.m_strName.c_str(), nServoId, nEncZeroPos);
+    return -PT_ECODE_BAD_VAL;
+  }
+
+  switch( pServo->GetServoMode() )
+  {
+    case DYNA_MODE_CONTINUOUS:
+      break;
+    case DYNA_MODE_SERVO:
+    default:
+      if( iabs(nOdMaxPos - nOdMinPos) > (nServoEncMax - nServoEncMin) )
+      {
+        LOGERROR("Joint %s (servo=%d): "
+          "%d: (%d,%d): Joint (min,max) range is out of servo movement range.",
+          joint.m_strName.c_str(), nServoId, nOdMinPos, nOdMaxPos);
+        return -PT_ECODE_BAD_VAL;
+      }
+      break;
+  }
+
+  // current zero odometer position
+  nDeltaPos = pServo->OdometerToEncoder(0);
+
+  // new zero position
+  nOdGoalPos = nEncZeroPos - nSign * nDeltaPos;
+
+  //
+  // Move to new zero point position.
+  //
+  LOGDIAG2("Joint %s (servo=%d): "
+      "Move to the new zero point at %.2lf degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nOdGoalPos));
+
+  moveWait(pServo, nOdGoalPos, TuneCalSpeed);
+
+  nOdCurPos = pServo->GetOdometer();
+
+  LOGDIAG2("Joint %s (servo=%d): Stopped at %.2lf degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nOdCurPos));
+
+  // 
+  // Reset odometer to new zero degree position.
+  //
+  m_robot.resetOdometerForServo(nServoId, bIsReverse);
+
+  LOGDIAG2("Joint %s (servo=%d): Odometer reset.",
+        joint.m_strName.c_str(), nServoId);
+
+  joint.m_nEncZeroPos       = pServo->OdometerToEncoder(0);
+  joint.m_nMinPhyLimitOd    = nOdMinPos;
+  joint.m_nMaxPhyLimitOd    = nOdMaxPos;
+  joint.m_fMinPhyLimitRads  = (double)joint.m_nMinPhyLimitOd / 
+                                      joint.m_fTicksPerJointRad;
+  joint.m_fMaxPhyLimitRads  = (double)joint.m_nMaxPhyLimitOd / 
+                                      joint.m_fTicksPerJointRad;
+  joint.m_nMinSoftLimitOd   = joint.m_nMinPhyLimitOd + TuneBackoff;
+  joint.m_nMaxSoftLimitOd   = joint.m_nMaxPhyLimitOd - TuneBackoff;
+
+  joint.m_fMinSoftLimitRads = (double)joint.m_nMinSoftLimitOd / 
+                                      joint.m_fTicksPerJointRad;
+  joint.m_fMaxSoftLimitRads = (double)joint.m_nMaxSoftLimitOd / 
+                                      joint.m_fTicksPerJointRad;
+  
+  //
+  // Calibrated.
+  //
+  LOGDIAG2("Joint %s (servo=%d): Calibrated from parameters:\n"
+          "  Physical limits: [%.2lfdeg (od=%d), %.2lfdeg (od=%d)]\n"
+          "      Soft limits: [%.2lfdeg (od=%d), %.2lfdeg (od=%d)].",
+      joint.m_strName.c_str(), nServoId,
+      radToDeg(joint.m_fMinPhyLimitRads),  joint.m_nMinPhyLimitOd,
+      radToDeg(joint.m_fMaxPhyLimitRads),  joint.m_nMaxPhyLimitOd,
+      radToDeg(joint.m_fMinSoftLimitRads), joint.m_nMinSoftLimitOd,
+      radToDeg(joint.m_fMaxSoftLimitRads), joint.m_nMaxSoftLimitOd);
+
+  return PT_OK;
+}
 
 int PanTiltCalib::calibrate()
 {
   PanTiltRobot::MapRobotJoints::iterator  pos;
 
-  PanTiltRobotJoint  *pJoint;
-  int                 nServoId;
+  PanTiltRobotJoint *pJoint;
+  int               nServoId;
   size_t            i;
   int               rc;
 
@@ -164,38 +328,40 @@ int PanTiltCalib::calibrate()
 
 int PanTiltCalib::calibrateJointByTorqueLimits(PanTiltRobotJoint &joint)
 {
-  static int    TuneCalSpeed  = 75;     // calibration speed
-  static int    TuneBackoff   = 15;     // backoff position (ticks)
-
   int         nServoId;         // servo id
   DynaServo  *pServo;           // joint's master servo
   bool        bIsReverse;       // odometer is [not] reversed
   int         nOdStartPos;      // user's starting position 
   int         nOdGoalPos;       // working goal position
-  int         nOldMinLimit;     // original odometer minimum limit
-  int         nOldMaxLimit;     // original odometer maximum limit
+  int         nOdCurPos;        // working current position
+  int         nOdZeroPos;       // calibrated zero position
   int         nNewMinLimit;     // new odometer minimum limit
   int         nNewMaxLimit;     // new odometer maximum limit
-  int         nDeltaMin;        // delta odometer minimums
-  int         nDeltaMax;        // delta odometer maximums
-  int         nDeltaAvg;        // delta average
+  int         nOdRange;         // joint range
 
   nServoId      = joint.m_nMasterServoId;
-  nOldMinLimit  = joint.m_nMinPhyLimitOd;
-  nOldMaxLimit  = joint.m_nMaxPhyLimitOd;
   bIsReverse    = joint.m_nMasterServoDir == DYNA_DIR_CCW? false: true;
+
+  LOGDIAG2("Joint %s (servo=%d): Calibrating by torque limits.",
+      joint.m_strName.c_str(), nServoId);
 
   // dynamixel servo object in dynamixel chain
   PT_TRY_GET_SERVO(nServoId, pServo);
 
   nOdStartPos = pServo->GetOdometer();
 
+  LOGDIAG2("Joint %s (servo=%d): "
+    "Starting at %.2lf uncalibrated degrees (od=%d).",
+    joint.m_strName.c_str(), nServoId,
+    degrees(joint, nOdStartPos), nOdStartPos);
+
+
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   // Find minimum joint limit.
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
  
-  LOGDIAG3("Joint %s (servo=%d): "
-           "Determining minimum joint limit by torque limit.",
+  LOGDIAG2("Joint %s (servo=%d): "
+           "Determining minimum joint angle by torque limit.",
       joint.m_strName.c_str(), nServoId);
 
   //
@@ -220,23 +386,38 @@ int PanTiltCalib::calibrateJointByTorqueLimits(PanTiltRobotJoint &joint)
     }
   }
 
-  //LOGDIAG3("MOVE TO MINIMUM LIMIT.");
+  LOGDIAG2("Joint %s (servo=%d): Move to minimum >= %.2lf degrees (od=%d).",
+    joint.m_strName.c_str(), nServoId, degrees(joint, nOdGoalPos), nOdGoalPos);
+
   moveWait(pServo, nOdGoalPos, TuneCalSpeed);
 
   nNewMinLimit = pServo->GetOdometer();
 
+  LOGDIAG2("Joint %s (servo=%d): "
+      "Minimum reached at %.2lf uncalibrated degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nNewMinLimit));
+
   //
   // Off load servo by moving back to starting calibration position.
   //
-  //LOGDIAG3("MOVE BACK TO START.");
+  LOGDIAG2("Joint %s (servo=%d): "
+      "Move back to start at %.2lf uncalibrated degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nOdStartPos));
+
   moveWait(pServo, nOdStartPos, TuneCalSpeed);
+
+  nOdCurPos = pServo->GetOdometer();
+
+  LOGDIAG2("Joint %s (servo=%d): Stopped at %.2lf degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nOdCurPos));
+
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   // Find maximum limit.
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   
-  LOGDIAG3("Joint %s (servo=%d): "
-           "Determining maximum joint limit by torque limit.",
+  LOGDIAG2("Joint %s (servo=%d): "
+           "Determining maximum joint angle by torque limit.",
       joint.m_strName.c_str(), nServoId);
 
   //
@@ -261,46 +442,74 @@ int PanTiltCalib::calibrateJointByTorqueLimits(PanTiltRobotJoint &joint)
     }
   }
 
-  //LOGDIAG3("MOVE TO MAXIMUM LIMIT.");
+  LOGDIAG2("Joint %s (servo=%d): Move to maximum <= %.2lf degrees (od=%d).",
+    joint.m_strName.c_str(), nServoId, degrees(joint, nOdGoalPos), nOdGoalPos);
+
   moveWait(pServo, nOdGoalPos, TuneCalSpeed);
 
   nNewMaxLimit = pServo->GetOdometer();
 
+  LOGDIAG2("Joint %s (servo=%d): "
+      "Minimum reached at %.2lf uncalibrated degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nNewMaxLimit));
+
   //
   // Off load servo by moving back to starting calibration position
   //
-  //LOGDIAG3("MOVE BACK TO START AGAIN.");
+  LOGDIAG2("Joint %s (servo=%d): "
+      "Move back to start at %.2lf uncalibrated degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nOdStartPos));
+
   moveWait(pServo, nOdStartPos, TuneCalSpeed);
 
+  nOdCurPos = pServo->GetOdometer();
+
+  LOGDIAG2("Joint %s (servo=%d): Stopped at %.2lf degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nOdCurPos));
+
+
+  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+  // Set zero point and limits
+  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
   //
-  // Calculate best new zero degree point.
+  // Calculate new zero point at center of range of motion.
   //
-  nDeltaMin = nNewMinLimit - nOldMinLimit;
-  nDeltaMax = nNewMaxLimit - nOldMaxLimit;
-  nDeltaAvg = (nDeltaMin + nDeltaMax) / 2;
+  nOdRange   = (nNewMaxLimit - nNewMinLimit) / 2; // half range
+  nOdZeroPos = (nNewMaxLimit + nNewMinLimit) / 2; // uncalib center position
+
+  LOGDIAG2("Joint %s (servo=%d): "
+      "Move to the new zero point at %.2lf degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nOdZeroPos));
 
   //
   // Move to new zero point position.
   //
-  //LOGDIAG3("MOVE TO NEW ZERO=%d.", nOdStartPos+nDeltaAvg);
-  moveWait(pServo, nOdStartPos+nDeltaAvg, TuneCalSpeed);
+  moveWait(pServo, nOdZeroPos, TuneCalSpeed);
+
+  nOdCurPos = pServo->GetOdometer();
+
+  LOGDIAG2("Joint %s (servo=%d): Stopped at %.2lf degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nOdCurPos));
 
   // 
   // Reset odometer to new zero degree position.
   //
   m_robot.resetOdometerForServo(nServoId, bIsReverse);
 
+  LOGDIAG2("Joint %s (servo=%d): Odometer reset.",
+        joint.m_strName.c_str(), nServoId);
+
   //
   // Adjust limits and positions to adjusted zero degree point.
   //
-  joint.m_nMinPhyLimitOd    = nNewMinLimit - nDeltaAvg;
-  joint.m_nMaxPhyLimitOd    = nNewMaxLimit - nDeltaAvg;
-
+  joint.m_nEncZeroPos       = pServo->OdometerToEncoder(0);
+  joint.m_nMinPhyLimitOd    = -nOdRange;
+  joint.m_nMaxPhyLimitOd    = nOdRange;
   joint.m_fMinPhyLimitRads  = (double)joint.m_nMinPhyLimitOd / 
                                       joint.m_fTicksPerJointRad;
   joint.m_fMaxPhyLimitRads  = (double)joint.m_nMaxPhyLimitOd / 
                                       joint.m_fTicksPerJointRad;
-  
   joint.m_nMinSoftLimitOd   = joint.m_nMinPhyLimitOd + TuneBackoff;
   joint.m_nMaxSoftLimitOd   = joint.m_nMaxPhyLimitOd - TuneBackoff;
 
@@ -308,25 +517,36 @@ int PanTiltCalib::calibrateJointByTorqueLimits(PanTiltRobotJoint &joint)
                                       joint.m_fTicksPerJointRad;
   joint.m_fMaxSoftLimitRads = (double)joint.m_nMaxSoftLimitOd / 
                                       joint.m_fTicksPerJointRad;
-  
+
   //
-  // Finally move to ideal calibration position.
+  // Finally move to ideal calibration position if not zero.
   //
   if( joint.m_fCalibPosRads != 0.0 )
   { 
+    LOGDIAG2("Joint %s (servo=%d): Move to calibrated zero pt=%.2lf degrees.",
+        joint.m_strName.c_str(), nServoId, radToDeg(joint.m_fCalibPosRads));
+
     nOdGoalPos = (int)(joint.m_fCalibPosRads * joint.m_fTicksPerJointRad);
-    //LOGDIAG3("MOVE TO CALIB ZERO PT=%d.", nOdGoalPos);
+
     moveWait(pServo, nOdGoalPos, TuneCalSpeed);
+
+    nOdCurPos = pServo->GetOdometer();
+
+    LOGDIAG2("Joint %s (servo=%d): Stopped at %.2lf degrees.",
+      joint.m_strName.c_str(), nServoId, degrees(joint, nOdCurPos));
   }
 
   //
   // Calibrated.
   //
-  LOGDIAG3("Joint %s (servo=%d): Calibrated:\n"
-          "  Torque [min, max] limits: [%.2lfdeg (od=%d), %.2lfdeg (od=%d)].",
+  LOGDIAG2("Joint %s (servo=%d): Calibrated by torque:\n"
+          "  Physical limits: [%.2lfdeg (od=%d), %.2lfdeg (od=%d)]\n"
+          "      Soft limits: [%.2lfdeg (od=%d), %.2lfdeg (od=%d)].",
       joint.m_strName.c_str(), nServoId,
-      radToDeg(joint.m_fMinPhyLimitRads), joint.m_nMinPhyLimitOd,
-      radToDeg(joint.m_fMaxPhyLimitRads), joint.m_nMaxPhyLimitOd);
+      radToDeg(joint.m_fMinPhyLimitRads),  joint.m_nMinPhyLimitOd,
+      radToDeg(joint.m_fMaxPhyLimitRads),  joint.m_nMaxPhyLimitOd,
+      radToDeg(joint.m_fMinSoftLimitRads), joint.m_nMinSoftLimitOd,
+      radToDeg(joint.m_fMaxSoftLimitRads), joint.m_nMaxSoftLimitOd);
 
   return PT_OK;
 }
@@ -364,4 +584,9 @@ int PanTiltCalib::moveWait(DynaServo *pServo, int nOdGoalPos, int nSpeed)
   //while( iabs(nOdBefore - nOdAfter) > TuneDeltaErr );
 
   return pServo->GetOdometer();
+}
+
+double PanTiltCalib::degrees(PanTiltRobotJoint &joint, int nOdPos)
+{
+  return m_robot.odPosToJointPosition(joint, nOdPos, units_degrees);
 }

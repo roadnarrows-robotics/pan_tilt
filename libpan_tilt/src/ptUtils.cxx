@@ -18,7 +18,7 @@
  * \author Robin Knight   (robin.knight@roadnarrows.com)
  *
  * \par Copyright
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
@@ -59,9 +59,12 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <stdio.h>
+#include <wordexp.h>
 #include <errno.h>
 
 #include <string>
+#include <sstream>
+#include <vector>
 
 #include "rnr/rnrconfig.h"
 #include "rnr/log.h"
@@ -139,4 +142,62 @@ uint_t pan_tilt::strToVersion(const string &str)
   sscanf(str.c_str(), "%d.%d.%d", &nMajor, &nMinor, &nRevision);
 
   return PT_VERSION(nMajor, nMinor, nRevision);
+}
+
+vector<string> &pan_tilt::split(const string   &s,
+                                 char           delim,
+                                 vector<string> &elems)
+{
+  stringstream ss(s);
+  string item;
+
+  while( getline(ss, item, delim) )
+  {
+    elems.push_back(item);
+  }
+  return elems;
+}
+
+vector<string> pan_tilt::split(const string &s, char delim)
+{
+  vector<string> elems;
+
+  split(s, delim, elems);
+
+  return elems;
+}
+
+string pan_tilt::expandFile(const string &strFileName)
+{
+  wordexp_t   exp_result;
+  string      strExpName;
+
+  if( strFileName.empty() )
+  {
+    strExpName = strFileName;
+  }
+  else
+  {
+    wordexp(strFileName.c_str(), &exp_result, 0);
+
+    strExpName = exp_result.we_wordv[0];
+
+    wordfree(&exp_result);
+  }
+
+  return strExpName;
+}
+
+string pan_tilt::expandFile(const string &strDirName, const string &strFileName)
+{
+  wordexp_t   exp_result;
+
+  if( strDirName.empty() )
+  {
+    return expandFile(strFileName);
+  }
+  else
+  {
+    return expandFile(strDirName + '/' + strFileName);
+  }
 }

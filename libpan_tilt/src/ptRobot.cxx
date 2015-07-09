@@ -17,7 +17,7 @@
  * \author Daniel Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.RoadNarrows.com)
  * \n All Rights Reserved
  */
@@ -76,6 +76,7 @@
 #include "pan_tilt/ptUtils.h"
 #include "pan_tilt/ptSpec.h"
 #include "pan_tilt/ptDesc.h"
+#include "pan_tilt/ptXmlCalib.h"
 #include "pan_tilt/ptJoint.h"
 #include "pan_tilt/ptCalib.h"
 #include "pan_tilt/ptTraj.h"
@@ -232,10 +233,10 @@ int PanTiltRobot::connect(const string &strSerDevName, int nBaudRate)
 
   //
   // Create dynamixel background virtual servo thread.
-  //  Execution Cylcle:   20Hz == 50000 usec
-  //  Position Tolerance: plus/minus 0.2 degrees.
+  //  Execution Cylcle:   60Hz
+  //  Position Tolerance: plus/minus 0.1 degrees.
   //
-  m_pDynaBgThread = new DynaBgThread(50000, 0.2);
+  m_pDynaBgThread = new DynaBgThread(60.0, 0.1);
 
   // register dynamixel chain with thread
   m_pDynaBgThread->RegisterChainAgent(m_pDynaChain);
@@ -245,6 +246,12 @@ int PanTiltRobot::connect(const string &strSerDevName, int nBaudRate)
   
   // give a little time to bg thread
   usleep(1000);
+
+  //
+  // Try to read any previous calibration parameters, and if valid, calibrate
+  // from these parameters.
+  //
+  calibrateFromParams();
 
   LOGDIAG1("Connected to Pan-Tilt.");
 
@@ -302,19 +309,59 @@ int PanTiltRobot::disconnect()
   LOGDIAG1("Disconnected from Pan-Tilt.");
 }
 
+int PanTiltRobot::calibrateFromParams()
+{
+  PanTiltCalibParams  params;
+  PanTiltXmlCalib     xml;
+  PanTiltCalib        calib(*this);
+  int                 rc;
+
+  // load xml calibration parameters and validate
+  rc = xml.load(params, PanTiltUserCfgPath, PanTiltCalibXml, true);
+
+  // set parameters to run-time joint parameters
+  if( rc == PT_OK )
+  {
+    rc = calib.calibrateFromParams(params);
+  }
+
+  // robot is calibrated
+  if( rc == PT_OK )
+  {
+    // reconfigure for normal operation
+    if( (rc = configForOperation()) < 0 )
+    {
+      LOGERROR("Failed to configure Pan-Tilt for operation.");
+      m_eOpState = PanTiltOpStateUncalibrated;
+    }
+
+    else
+    {
+      // synchronize robot op state to collective joint operational states
+      m_eOpState = detRobotOpState();
+
+      gotoZeroPtPos(false);
+
+      LOGDIAG1("Pan-Tilt calibrated from pre-calibrated parameters.");
+    }
+  }
+
+  return rc;
+}
+
 int PanTiltRobot::calibrate(bool bForceRecalib)
 {
-  PanTiltCalib    calib(*this);
-  int             rc;
+  PanTiltCalib        calib(*this);
+  int                 rc;
 
   PT_TRY_CONN();
 
-  // lock the arm
+  // lock the robot
   freeze(false);
 
   m_eOpState = PanTiltOpStateUncalibrated;
 
-  // configure arm for calibration
+  // configure robot for calibration
   if( (rc = configForCalibration(bForceRecalib)) < 0 )
   {
     LOGERROR("Failed to configure Pan-Tilt for calibration.");
@@ -323,7 +370,7 @@ int PanTiltRobot::calibrate(bool bForceRecalib)
 
   m_eOpState = PanTiltOpStateCalibrating;
 
-  // now physically calibrate the arm
+  // now physically calibrate the robot
   if( (rc = calib.calibrate()) < 0 )
   {
     LOGERROR("Failed to detect Pan-Tilt limits.");
@@ -342,10 +389,57 @@ int PanTiltRobot::calibrate(bool bForceRecalib)
   // synchronize robot operation state to collective joint operational states
   m_eOpState = detRobotOpState();
 
-  // arm is calibrated
+  // robot is calibrated
   gotoZeroPtPos(false);
 
+  // save calibration parameters
+  saveCalibParams();
+ 
   LOGDIAG1("Pan-Tilt calibrated.");
+
+  return rc;
+}
+
+int PanTiltRobot::saveCalibParams()
+{
+  PanTiltCalibParams        params;
+  MapRobotJoints::iterator  iterKin;
+  string                    strName;
+  size_t                    nJoints = 0;
+  int                       rc;
+
+  for(iterKin = m_kin.begin(); iterKin != m_kin.end(); ++iterKin)
+  {
+    strName = iterKin->second.m_strName;
+
+    if( strName == "pan" )
+    {
+      params.m_nPanEncZero  = iterKin->second.m_nEncZeroPos;
+      params.m_nPanOdMin    = iterKin->second.m_nMinPhyLimitOd;
+      params.m_nPanOdMax    = iterKin->second.m_nMaxPhyLimitOd;
+      ++nJoints;
+    }
+    else if( strName == "tilt" )
+    {
+      params.m_nTiltEncZero = iterKin->second.m_nEncZeroPos;
+      params.m_nTiltOdMin   = iterKin->second.m_nMinPhyLimitOd;
+      params.m_nTiltOdMax   = iterKin->second.m_nMaxPhyLimitOd;
+      ++nJoints;
+    }
+  }
+
+  if( nJoints != m_kin.size() )
+  {
+    LOGERROR("BUG: Only %d joints in kinematics chain.", nJoints);
+    rc = -PT_ECODE_INTERNAL;
+  }
+  else
+  {
+    PanTiltXmlCalib xml;
+
+    params.m_bIsSpecified = true;
+    rc = xml.saveFile(params);
+  }
 
   return rc;
 }
@@ -576,7 +670,7 @@ int PanTiltRobot::estop()
 
   m_bAlarmState = true;
 
-  LOGDIAG3("Pan-Tilt emergency stopped.");
+  LOGDIAG2("Pan-Tilt emergency stopped.");
 
   return PT_OK;
 }
@@ -597,7 +691,7 @@ int PanTiltRobot::freeze(bool bOverride)
 
   m_pDynaChain->Freeze();
 
-  LOGDIAG3("Pan-Tilt frozen at current position.");
+  LOGDIAG2("Pan-Tilt frozen at current position.");
 
   return PT_OK;
 }
@@ -615,7 +709,7 @@ int PanTiltRobot::release()
 
   m_pDynaChain->Release();
 
-  LOGDIAG3("Pan-Tilt servo drives released.");
+  LOGDIAG2("Pan-Tilt servo drives released.");
 
   return PT_OK;
 }
@@ -786,6 +880,59 @@ int PanTiltRobot::move(PanTiltJointTrajectoryPoint &trajectoryPoint,
   }
 
   return rc;
+}
+
+bool PanTiltRobot::isMoving(const string &strJointName)
+{
+  PanTiltRobotJoint *pJoint;  // robotic joint
+  DynaServo         *pServo;  // servo
+  bool               bMoving;  // servo is [not] moving
+
+  if( (pJoint = getJoint(strJointName)) == NULL )
+  {
+    return false;
+  }
+
+  else if( (pServo = m_pDynaChain->GetServo(pJoint->m_nMasterServoId)) == NULL )
+  {
+    return false;
+  }
+
+  else
+  {
+    return isMoving(pServo);
+  }
+}
+
+bool PanTiltRobot::isMoving(DynaServo *pServo)
+{
+  bool  bMoving = false;    // servo is [not] moving
+
+  pServo->ReadIsMoving(&bMoving);
+
+  return bMoving;
+}
+
+bool PanTiltRobot::isMoving()
+{
+  int         iter;       // servo iterator
+  int         nServoId;   // servo id
+  DynaServo  *pServo;     // servo
+  bool        bMoving;    // servo is [not] moving
+
+  for(nServoId = m_pDynaChain->IterStart(&iter);
+      nServoId != DYNA_ID_NONE;
+      nServoId = m_pDynaChain->IterNext(&iter))
+  {
+    pServo = m_pDynaChain->GetServo(nServoId);
+    bMoving = false;
+    pServo->ReadIsMoving(&bMoving);
+    if( bMoving )
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 int PanTiltRobot::getRobotStatus(PanTiltRobotStatus &robotStatus)
@@ -1408,8 +1555,8 @@ void PanTiltRobot::fauxcalibrate()
 
 int PanTiltRobot::configForCalibration(bool bForceRecalib)
 {
-  static double TuneOverTorqueTh  = 50.0;   // over torque threshold
-  static double TuneClearTorqueTh = 45.0;   // clear over torque threshold
+  static double TuneOverTorqueTh  = 40.0;   // over torque threshold
+  static double TuneClearTorqueTh = 35.0;   // clear over torque threshold
 
   int   rc;
 
@@ -1439,7 +1586,7 @@ int PanTiltRobot::configForCalibration(bool bForceRecalib)
 
   // override torque values with gentler torque limits
   if( (rc = configSoftTorqueForAllServos(m_kin, TuneOverTorqueTh,
-                                                   TuneClearTorqueTh)) < 0 )
+                                                TuneClearTorqueTh)) < 0 )
   {
     LOGERROR(
         "Failed to configure calibration soft torque limits for all servos.");
@@ -1636,6 +1783,7 @@ int PanTiltRobot::configRAMForServo(int nServoId, PanTiltRobotJoint &joint)
 {
   DynaServo  *pServo;
   uint_t      uTorqueMax;
+  int         nOdCurPos, nOdGoalPos;
   int         rc;
 
   // get dynamixel servo object in dynamixel chain
@@ -1650,6 +1798,21 @@ int PanTiltRobot::configRAMForServo(int nServoId, PanTiltRobotJoint &joint)
   if( (rc = pServo->WriteMaxTorqueLimit(uTorqueMax)) < 0 )
   {
     LOGWARN("Servo %d: Cannot write RAM alarm shutdown mask.", nServoId);
+  }
+
+  uTorqueMax  = pServo->GetSpecification().m_uRawTorqueMax;
+
+  // --
+  // For servo mode actuators, make sure goal position is same as current,
+  // otherwise fast motion jerks could occur once torque is enabled.
+  // --
+  if( (pServo->ReadCurPos(&nOdCurPos) == DYNA_OK) &&
+      (pServo->ReadGoalPos(&nOdGoalPos) == DYNA_OK) )
+  {
+    if( nOdGoalPos != nOdCurPos )
+    {
+      pServo->WriteGoalPos(nOdCurPos);
+    }
   }
 
   // --
@@ -1951,17 +2114,19 @@ int PanTiltRobot::asyncThExecCalibrate()
 
 int PanTiltRobot::asyncThExecPan()
 {
+  static useconds_t TuneTPanDir   = 200000;   // 0.2 seconds for changing dir
   static useconds_t TuneTPan      = 100000;   // 0.1 seconds
-  static useconds_t TuneTPanDir   = 200000;   // 0.2 seconds
-  static double     TuneDeltaPos  = 0.0087;   // 0.5 degrees
-  static double     TuneDeltaVel  = 5.0;      // 5.0 percent
+  static double     TuneDeltaVel  = 0.5;      // 0.5 percent
+  static int        TuneStopCnt   = 3;        // max consecutive stops
 
   PanTiltJointTrajectoryPoint  *pTraj;
   string                        strPan("pan");
   PanTiltRobotJoint            *pJoint;
+  DynaServo                    *pServo;
   double                        fTgtPos, fTgtVel, fTgtAccel;
   double                        fCurPos, fCurVel;
   useconds_t                    t;
+  int                           cnt;
   int                           i;
   int                           rc;
  
@@ -1970,22 +2135,32 @@ int PanTiltRobot::asyncThExecPan()
   i       = 0;
   rc      = PT_OK;
  
+  // get master servo
+  PT_TRY_GET_SERVO(pJoint->m_nMasterServoId, pServo);
+
   while( rc == PT_OK )
   {
     pTraj[i][0].get(strPan, fTgtPos, fTgtVel, fTgtAccel);
 
+    fprintf(stderr, "[%d] TgtPos=%.2fdeg, TgtVel=%.2f%%\n",
+          i, radToDeg(fTgtPos), fTgtVel);
+
     rc = move(pTraj[i], false);
 
     t = TuneTPanDir;
+
+    cnt = 0;
 
     do
     {
       usleep(t);
       fCurPos = getCurJointPosition(*pJoint);
       fCurVel = getCurJointVelocity(*pJoint);
+      cnt = fabs(fCurVel) > TuneDeltaVel? 0: cnt+1;
       t = TuneTPan;
-    } while((fabs(fCurPos - fTgtPos) > TuneDeltaPos) &&
-            (fabs(fCurVel) > TuneDeltaVel));
+      fprintf(stderr, "  CurPos=%.2fdeg, CurVel=%.2f%%, StopCnt=%d\n",
+          radToDeg(fCurPos), fCurVel, cnt);
+    } while( cnt < TuneStopCnt );
 
     i = (i + 1) % 2;
   }

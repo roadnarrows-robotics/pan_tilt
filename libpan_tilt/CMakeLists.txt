@@ -47,6 +47,7 @@ add_library(pan_tilt
   src/ptSpec.cxx
   src/ptStatus.cxx
   src/ptUtils.cxx
+  src/ptXmlCalib.cxx
 )
 
 target_link_libraries(pan_tilt 

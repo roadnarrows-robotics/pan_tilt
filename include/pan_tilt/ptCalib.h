@@ -17,7 +17,7 @@
  * \author Daniel Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.RoadNarrows.com)
  * \n All Rights Reserved
  */
@@ -100,6 +100,15 @@ namespace pan_tilt
     }
 
     /*!
+     * \brief Calibrate pan-tilt from pre-calibration parameters.
+     *
+     * \param params    Pan-Tilt calibration parameters.
+     *
+     * \copydoc doc_return_std
+     */
+    int calibrateFromParams(const PanTiltCalibParams &params);
+
+    /*!
      * \brief Calibrate the pan-tilt's robotic mechanism.
      *
      * \copydoc doc_return_std
@@ -108,6 +117,22 @@ namespace pan_tilt
 
   protected:
     PanTiltRobot &m_robot;    ///< robot instance
+
+    int validateJointParams(PanTiltRobotJoint &joint,
+                            int                nEncMinPos,
+                            int                nEncZeroPos,
+                            int                nEncMaxPos);
+
+    /*!
+     * \brief Calibrate pan-tilt joint from pre-calibration parameters.
+     *
+     * \param joint   Robotic joint to calibrate.
+     * \param params  Pan-Tilt calibration parameters.
+     *
+     * \copydoc doc_return_std
+     */
+    int calibrateJointFromParams(PanTiltRobotJoint        &joint,
+                                 const PanTiltCalibParams &params);
 
     /*!
      * \brief Calibrate joint by torque limits.
@@ -150,6 +175,17 @@ namespace pan_tilt
      * \return New odometer position.
      */
     virtual int moveWait(DynaServo *pServo, int nOdGoalPos, int nSpeed);
+
+    /*!
+     * \brief Helper function to convert to joint position in degrees.
+     *
+     * \param joint   Robotic joint to calibrate.
+     * \param nOdPos  Odometer position (ticks).
+     *
+     * \return Degrees.
+     */
+    double degrees(PanTiltRobotJoint &joint, int nOdPos);
+
   };
 
 } // namespace pan_tilt

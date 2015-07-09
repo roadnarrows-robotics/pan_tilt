@@ -17,7 +17,7 @@
  * \author Daniel Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.RoadNarrows.com)
  * \n All Rights Reserved
  */
@@ -141,6 +141,7 @@ namespace pan_tilt
     double      m_fMaxJointRadsPerSec;///< maximum joint radians per second
 
     // discovered limits and positions
+    int         m_nEncZeroPos;        ///< encoder value at zero position
     double      m_fMinPhyLimitRads;   ///< joint min physical limit (radians)
     double      m_fMaxPhyLimitRads;   ///< joint max physical limit (radians)
     int         m_nMinPhyLimitOd;     ///< joint min phys limit (odometer ticks)

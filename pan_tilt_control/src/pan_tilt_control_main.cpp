@@ -19,7 +19,7 @@
  * \author Robin Knight (robin.knight@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
@@ -121,12 +121,12 @@ static const PkgInfo_T PkgInfo =
 {
   NodeName,                       ///< package name
   "1.0.0",                        ///< package version
-  "2014.02.22",                   ///< date (and time)
-  "2014",                         ///< year
+  "2015.07.08",                   ///< date (and time)
+  "2015",                         ///< year
   NodeName,                       ///< package full name
   "Robin Knight, Daniel Packard", ///< authors
   "RoadNarrows LLC",              ///< owner
-  "(C) 2014 RoadNarrows LLC"      ///< disclaimer
+  "(C) 2014-2015 RoadNarrows LLC" ///< disclaimer
 };
 
 /*!

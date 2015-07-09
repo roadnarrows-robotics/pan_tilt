@@ -18,7 +18,7 @@
  * \author Robin Knight   (robin.knight@roadnarrows.com)
  *
  * \par Copyright
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
@@ -61,6 +61,7 @@
 #include <math.h>
 
 #include <string>
+#include <vector>
 
 #include "rnr/rnrconfig.h"
 #include "rnr/log.h"
@@ -198,6 +199,51 @@ namespace pan_tilt
     return (lhs.tv_sec == rhs.tv_sec) && (lhs.tv_usec == rhs.tv_usec)?
               true: false;
   }
+
+  /*!
+   * \brief Split string at the delimiter character.
+   *
+   * \param s     String to split.
+   * \param delem Delimiter character.
+   * \param [out] elems   Vector of split strings.
+   *
+   * \return Reference to vector of split strings.
+   */
+  std::vector<std::string> &split(const std::string &s,
+                                  char delim,
+                                  std::vector<std::string> &elems);
+
+  /*!
+   * \brief Split string at the delimiter character.
+   *
+   * \param s     String to split.
+   * \param delem Delimiter character.
+   *
+   * \return Vector of split strings.
+   */
+  std::vector<std::string> split(const std::string &s, char delim);
+
+  /*!
+   * \brief Perform word expansion on posix-shell file name.
+   *
+   * \param strFileName File name with/without any shell expansion meta
+   *                    characters.
+   *
+   * \return Expanded file name.
+   */
+  std::string expandFile(const std::string &strFileName);
+  
+  /*!
+   * \brief Join and perform word expansion on posix-shell file name.
+   *
+   * \param strFileName File name with/without any shell expansion meta
+   *                    characters.
+   *
+   * \return Expanded file name.
+   */
+  std::string expandFile(const std::string &strDirName,
+                         const std::string &strFileName);
+  
 } // namespace pan_tilt
 
 

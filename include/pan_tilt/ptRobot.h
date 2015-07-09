@@ -17,7 +17,7 @@
  * \author Daniel Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.RoadNarrows.com)
  * \n All Rights Reserved
  */
@@ -73,6 +73,7 @@
 #include "pan_tilt/pan_tilt.h"
 #include "pan_tilt/ptUtils.h"
 #include "pan_tilt/ptDesc.h"
+#include "pan_tilt/ptXmlCalib.h"
 #include "pan_tilt/ptJoint.h"
 #include "pan_tilt/ptCalib.h"
 #include "pan_tilt/ptTraj.h"
@@ -299,6 +300,35 @@ namespace pan_tilt
      * \copydoc doc_return_std
      */
     int move(PanTiltJointTrajectoryPoint &trajectoryPoint, bool bOverride=true);
+
+    /*!
+     * \brief Test if joint is moving. 
+     *
+     * \param strJointName  Name of joint.
+     *
+     * \return Returns true or false.
+     */
+    bool isMoving(const std::string &strJointName);
+
+    /*!
+     * \brief Test if servo is moving. 
+     *
+     * Movement is determine by reading the move state of the servo.
+     *
+     * \param pServo  Ponter to servo.
+     *
+     * \return Returns true or false.
+     */
+    bool isMoving(DynaServo *pServo);
+
+    /*!
+     * \brief Test if any joint is moving. 
+     *
+     * Movement is determine by reading the move state of the servo.
+     *
+     * \return Returns true or false.
+     */
+    bool isMoving();
 
 
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -549,7 +579,7 @@ namespace pan_tilt
      *
      * \return If found, returns pointer to joint. Otherwise returns NULL.
      */
-    PanTiltRobotJoint *getJoint(std::string &strName)
+    PanTiltRobotJoint *getJoint(const std::string &strName)
     {
       IMapRobotJoints::iterator  iter;
 
@@ -815,6 +845,20 @@ namespace pan_tilt
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Hardware and Software Methods
     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+    /*!
+     * \brief Calibrate pan-tilt's from pre-calibration parameters.
+     *
+     * \copydoc doc_return_std
+     */
+    int calibrateFromParams();
+
+    /*!
+     * \brief Save calibration parameters to user's XML file.
+     *
+     * \copydoc doc_return_std
+     */
+    int saveCalibParams();
 
     /*!
      * \brief Faux calibrate pan-tilt.

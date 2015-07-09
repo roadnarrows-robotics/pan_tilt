@@ -20,7 +20,7 @@
 ## \author Robin Knight (robin.knight@roadnarrows.com)
 ##  
 ## \par Copyright:
-##   (C) 2014.  RoadNarrows LLC.\n
+##   (C) 2014-2015.  RoadNarrows LLC.\n
 ##   (http://www.roadnarrows.com)\n
 ##   All Rights Reserved
 ##
@@ -78,8 +78,8 @@ class ConfigDlg(Toplevel):
       'pan_min_pos':  -125.0,
       'pan_max_pos':  125.0,
       'pan_vel':      20.0,
-      'tilt_min_pos': 10.0,
-      'tilt_max_pos': 90.0,
+      'tilt_min_pos': 0.0,
+      'tilt_max_pos': 80.0,
       'tilt_vel':     20.0
     },
   }

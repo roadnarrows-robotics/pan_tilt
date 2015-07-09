@@ -21,7 +21,7 @@
 ## \author Robin Knight (robin.knight@roadnarrows.com)
 ##  
 ## \par Copyright:
-##   (C) 2014.  RoadNarrows LLC.\n
+##   (C) 2014-2015.  RoadNarrows LLC.\n
 ##   (http://www.roadnarrows.com)\n
 ##   All Rights Reserved
 ##
@@ -81,7 +81,7 @@ from pan_tilt_control.ACCalibrate import *
 # ------------------------------------------------------------------------------
 
 ## \brief Application version. Update as needed. 
-appVersion = '1.0.1'
+appVersion = '1.1.0'
 
 ## \brief Image search paths.
 imagePath = [
@@ -166,6 +166,12 @@ class window(Frame):
         'calibrating':  False,    # [not] calibrating
         'ac':           None,     # calibration action client
         'id':           0         # after id
+      }
+
+    # move state
+    self.m_moveState = {
+        'moving':  False,         # [not] moving
+        'id':      0              # after id
       }
 
     # joint field table column ordering of field keys
@@ -876,7 +882,9 @@ class window(Frame):
     row  += 1
 
     # up
-    w = self.createButton(wframe, "Tilt\nUp", "icons/icon_up.png", self.tiltUp)
+    w = self.createButton(wframe, "Tilt\nUp", "icons/icon_up.png", self.noop)
+    w.bind('<Button-1>', self.mouseNavUp)
+    w.bind('<ButtonRelease-1>', self.mouseNavStop)
     w.grid(row=row, column=2, sticky=N+E+W)
     self.m_keysFewMoves.append('tilt_up')
     self.m_keysNoMoves.append('tilt_up')
@@ -885,21 +893,27 @@ class window(Frame):
 
     # left
     w = self.createButton(wframe, "Pan\nLeft", "icons/icon_left.png",
-        self.panLeft)
+        self.noop)
+    w.bind('<Button-1>', self.mouseNavLeft)
+    w.bind('<ButtonRelease-1>', self.mouseNavStop)
     w.grid(row=row, column=1, sticky=N+E+W)
     self.m_keysFewMoves.append('pan_left')
     self.m_keysNoMoves.append('pan_left')
 
     # down
     w = self.createButton(wframe, "Tilt\nDown", "icons/icon_down.png",
-        self.tiltDown)
+        self.noop)
+    w.bind('<Button-1>', self.mouseNavDown)
+    w.bind('<ButtonRelease-1>', self.mouseNavStop)
     w.grid(row=row, column=2, sticky=N+E+W)
     self.m_keysFewMoves.append('tilt_down')
     self.m_keysNoMoves.append('tilt_down')
 
     # right
     w = self.createButton(wframe, "Pan\nRight", "icons/icon_right.png",
-        self.panRight)
+        self.noop)
+    w.bind('<Button-1>', self.mouseNavRight)
+    w.bind('<ButtonRelease-1>', self.mouseNavStop)
     w.grid(row=row, column=3, sticky=N+E+W)
     self.m_keysFewMoves.append('pan_right')
     self.m_keysNoMoves.append('pan_right')
@@ -1217,7 +1231,11 @@ Make sure the workspace is clear of obstructions.""")
     #print 'up key'
     if self.m_wBttn['tilt_up']['state'] == 'normal':
       #self.m_wBttn['tilt_up'].flash()
-      self.tiltUp()
+      if not self.m_moveState['moving']:
+        dpos = degToRad(2.0)
+      else:
+        dpos = degToRad(30.0)
+      self.tiltUp(dpos, 10.0, 100)
 
   #
   ## \brief Keyboard Down key event.
@@ -1228,7 +1246,11 @@ Make sure the workspace is clear of obstructions.""")
     #print 'down key'
     if self.m_wBttn['tilt_down']['state'] == 'normal':
       #self.m_wBttn['tilt_down'].flash()
-      self.tiltDown()
+      if not self.m_moveState['moving']:
+        dpos = degToRad(2.0)
+      else:
+        dpos = degToRad(30.0)
+      self.tiltDown(dpos, 10.0, 100)
 
   #
   ## \brief Keyboard Left key event.
@@ -1239,7 +1261,11 @@ Make sure the workspace is clear of obstructions.""")
     #print 'left key'
     if self.m_wBttn['pan_left']['state'] == 'normal':
       #self.m_wBttn['pan_left'].flash()
-      self.panLeft()
+      if not self.m_moveState['moving']:
+        dpos = degToRad(2.0)
+      else:
+        dpos = degToRad(30.0)
+      self.panLeft(dpos, 10.0, 100)
 
   #
   ## \brief Keyboard Right key event.
@@ -1250,43 +1276,113 @@ Make sure the workspace is clear of obstructions.""")
     #print 'right key'
     if self.m_wBttn['pan_right']['state'] == 'normal':
       #self.m_wBttn['pan_right'].flash()
-      self.panRight()
+      if not self.m_moveState['moving']:
+        dpos = degToRad(2.0)
+      else:
+        dpos = degToRad(30.0)
+      self.panRight(dpos, 10.0, 100)
+
+  #
+  ## \brief Mouse Nav Up button press event.
+  ##
+  ## \param event   Specific mouse event.
+  #
+  def mouseNavUp(self, event):
+    #print 'mouseNavUp'
+    self.tiltUp(degToRad(180.0), 10.0, 0)
+
+  #
+  ## \brief Mouse Nav Down button press event.
+  ##
+  ## \param event   Specific mouse event.
+  #
+  def mouseNavDown(self, event):
+    #print 'mouseNavDown'
+    self.tiltDown(degToRad(180.0), 10.0, 0)
+
+  #
+  ## \brief Mouse Nav Left button press event.
+  ##
+  ## \param event   Specific mouse event.
+  #
+  def mouseNavLeft(self, event):
+    #print 'mouseNavLeft'
+    self.panLeft(degToRad(360.0), 10.0, 0)
+
+  #
+  ## \brief Mouse Nav Right button press event.
+  ##
+  ## \param event   Specific mouse event.
+  #
+  def mouseNavRight(self, event):
+    #print 'mouseNavRight'
+    self.panRight(degToRad(360.0), 10.0, 0)
+
+  #
+  ## \brief Mouse navigation button release event.
+  ##
+  ## \param event   Specific mouse event.
+  #
+  def mouseNavStop(self, event):
+    #print 'mouseNavStop'
+    self.freeze()
 
   #
   ## \brief Tilt up.
+  ##
+  ## \param dpos  Delta position from current position (absolute value radians).
+  ## \param vel   Velocity (percent)
+  ## \param msec  Auto-stop in msec milliseconds. Zero (0) = no auto-stop.
   #
-  def tiltUp(self):
-    pos = self.m_robotJoint['tilt']['position']['raw'] - degToRad(10.0)
+  def tiltUp(self, dpos, vel, msec):
+    #print 'tiltUp'
+    pos = self.m_robotJoint['tilt']['position']['raw'] - math.fabs(dpos)
     self.m_posManualTilt = pos
-    jointTrajectory = self.makeTrajectory(tilt=[pos, 10.0])
-    self.moveRobot(jointTrajectory)
+    jointTrajectory = self.makeTrajectory(tilt=[pos, vel])
+    self.moveRobot(jointTrajectory, msec)
 
   #
   ## \brief Tilt down.
+  ##
+  ## \param dpos  Delta position from current position (absolute value radians).
+  ## \param vel   Velocity (percent)
+  ## \param msec  Auto-stop in msec milliseconds. Zero (0) = no auto-stop.
   #
-  def tiltDown(self):
-    pos = self.m_robotJoint['tilt']['position']['raw'] + degToRad(10.0)
+  def tiltDown(self, dpos, vel, msec):
+    #print 'tiltDown'
+    pos = self.m_robotJoint['tilt']['position']['raw'] + math.fabs(dpos)
     self.m_posManualTilt = pos
-    jointTrajectory = self.makeTrajectory(tilt=[pos, 10.0])
-    self.moveRobot(jointTrajectory)
+    jointTrajectory = self.makeTrajectory(tilt=[pos, vel])
+    self.moveRobot(jointTrajectory, msec)
 
   #
   ## \brief Pan left.
+  ##
+  ## \param dpos  Delta position from current position (absolute value radians).
+  ## \param vel   Velocity (percent)
+  ## \param msec  Auto-stop in msec milliseconds. Zero (0) = no auto-stop.
   #
-  def panLeft(self):
-    pos = self.m_robotJoint['pan']['position']['raw'] + degToRad(10.0)
+  def panLeft(self, dpos, vel, msec):
+    #print 'panLeft'
+    pos = self.m_robotJoint['pan']['position']['raw'] + math.fabs(dpos)
     self.m_posManualPan = pos
-    jointTrajectory = self.makeTrajectory(pan=[pos, 10.0])
-    self.moveRobot(jointTrajectory)
+    jointTrajectory = self.makeTrajectory(pan=[pos, vel])
+    self.moveRobot(jointTrajectory, msec)
 
   #
   ## \brief Pan right.
+  ##
+  ## \param dpos  Delta position from current position (absolute value radians).
+  ## \param vel   Velocity (percent)
+  ## \param msec  Auto-stop in msec milliseconds. Zero (0) = no auto-stop.
   #
-  def panRight(self):
-    pos = self.m_robotJoint['pan']['position']['raw'] - degToRad(10.0)
+  def panRight(self, dpos, vel, msec):
+    #print 'panRight'
+    pos = self.m_robotJoint['pan']['position']['raw'] - math.fabs(dpos)
     self.m_posManualPan = pos
-    jointTrajectory = self.makeTrajectory(pan=[pos, 10.0])
+    jointTrajectory = self.makeTrajectory(pan=[pos, vel])
     self.moveRobot(jointTrajectory)
+    self.moveRobot(jointTrajectory, msec)
 
   #
   ## \brief Make trajectory message from keywords.
@@ -1308,19 +1404,44 @@ Make sure the workspace is clear of obstructions.""")
 
   #
   ## \brief Move robot along trajectory.
+  ##
+  ## \param trajecty      Trajectory of joint positions and velocities
+  ## \param msecAutoStop  Auto-stop in msec milliseconds.
+  ##                      Zero (0) = no auto-stop.
   #
-  def moveRobot(self, trajectory):
+  def moveRobot(self, trajectory, msecAutoStop=0):
+    self.moveCleanup()
+    if msecAutoStop > 0:
+      self.m_moveState['id'] = self.after(msecAutoStop, self.moveAutoStop)
     try:
       self.m_joint_cmd_pub.publish(trajectory)
+      self.m_moveState['moving'] = True
       self.showInfo('Move on specified trajectory.')
     except rospy.ROSException, e:
       self.showError('joint_command: ' + e.message + '.')
+
+  #
+  ## \brief Auto-stop move callback.
+  #
+  def moveAutoStop(self):
+    #print 'moveAutoStop'
+    self.freeze();
+
+  #
+  ## \brief Clean up move state.
+  #
+  def moveCleanup(self):
+    if self.m_moveState['id'] != 0:
+      self.after_cancel(self.m_moveState['id'])
+      self.m_moveState['id'] = 0
+    self.m_moveState['moving'] = False
 
   #
   ## \brief (Reset) emergency stop callback.
   #
   def estop(self):
     if self.m_robotStatus['estop_led']['raw'] == TriState.FALSE:
+      self.moveCleanup()
       self.showResetEStop()
       try:
         rospy.wait_for_service("pan_tilt_control/estop", timeout=1)
@@ -1376,6 +1497,7 @@ Make sure the workspace is clear of obstructions.""")
   ## \brief Freeze pan-tilt callback.
   #
   def freeze(self):
+    self.moveCleanup();
     try:
       rospy.wait_for_service("pan_tilt_control/freeze", timeout=1)
     except rospy.ROSException, e:
@@ -1855,6 +1977,9 @@ The pan-tilt may fall if not in a stable position.""")
           sep = ','
     return (text, fgColors['error'])
 
+  def noop(self):
+    pass
+
 
 # ------------------------------------------------------------------------------
 # Exception Class usage
@@ -1974,7 +2099,8 @@ Options and arguments:
     # publish trajectory to pan-tilt controller
     self.m_win.m_joint_cmd_pub = rospy.Publisher(
         "pan_tilt_control/joint_command",
-        trajectory_msgs.msg.JointTrajectory)
+        trajectory_msgs.msg.JointTrajectory,
+        queue_size=5)
 
     self.m_win.showInfo("Pan-Tilt interface initialized.")
 

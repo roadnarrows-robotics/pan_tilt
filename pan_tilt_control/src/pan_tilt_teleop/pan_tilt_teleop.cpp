@@ -18,7 +18,7 @@
  * \author Robin Knight (robin.knight@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
@@ -379,9 +379,9 @@ void PanTiltTeleop::sweep()
   svc.request.pan_min_pos   = degToRad(-125.0);
   svc.request.pan_max_pos   = degToRad(125.0);
   svc.request.pan_velocity  = 10.0;
-  svc.request.tilt_min_pos  = degToRad(10.0);
-  svc.request.tilt_max_pos  = degToRad(90.0);
-  svc.request.tilt_velocity = 20.0;
+  svc.request.tilt_min_pos  = degToRad(-10.0);
+  svc.request.tilt_max_pos  = degToRad(80.0);
+  svc.request.tilt_velocity = 10.0;
 
   if( m_clientServices["/pan_tilt_control/sweep"].call(svc) )
   {
@@ -784,7 +784,7 @@ void PanTiltTeleop::buttonPan(ButtonState &buttonState)
     return;
   }
 
-  pos = degToRad(50.0);
+  pos = degToRad(90.0);
   vel = (double)(-joy) / (double)XBOX360_JOY_MAX * 50.0;
 
   if( vel < 0.0 )
@@ -816,7 +816,7 @@ void PanTiltTeleop::buttonTilt(ButtonState &buttonState)
     return;
   }
 
-  pos = degToRad(50.0);
+  pos = degToRad(90.0);
   vel = (double)(joy) / (double)XBOX360_JOY_MAX * 50.0;
 
   if( vel < 0.0 )

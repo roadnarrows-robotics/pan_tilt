@@ -15,7 +15,7 @@
  * \author Daniel Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014  RoadNarrows
+ * (C) 2014-2015  RoadNarrows
  * (http://www.RoadNarrows.com)
  * \n All Rights Reserved
  */
@@ -197,6 +197,95 @@ namespace pan_tilt
   static const int PanTiltAuxServoIdPan     = 30; ///< pan servo id
   static const int PanTiltAuxServoIdTilt    = 31; ///< tilt servo id
   /*! \} */
+
+
+  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+  /*!
+   *
+   * \ingroup pt_h
+   * \defgroup pt_env  Pan-Tilt Environment
+   *
+   * Pan-Tilt directories and files.
+   *
+   * \{
+   */
+
+  //
+  // Images directory.
+  //
+  #ifdef PT_IMAGE_DIR
+  const char* const PanTiltImageDir = PT_IMAGE_DIR; ///< image directory
+  #else
+  const char* const PanTiltImageDir = "/usr/local/share/PanTilt/images";
+                                                    ///< image directory
+  #endif
+
+  //
+  // Icons directory.
+  //
+  #ifdef PT_ICON_DIR
+  const char* const PanTiltIconDir = PT_ICON_DIR;   ///< icon directory
+  #else
+  const char* const PanTiltIconDir = "/usr/local/share/PanTilt/images/icons";
+                                                    ///< icon directory
+  #endif
+
+  //
+  // Paths
+  //
+ 
+  /*! \brief System configuration search path. */
+  const char* const PanTiltSysCfgPath  = "/etc/pan_tilt:/etc";
+
+  /*! \brief User configuration search path and inheritance order. */
+  const char* const PanTiltUserCfgPath = "/etc/pan_tilt:~/.roadnarrows";
+
+  /*! \brief User home configuration directory. */
+  const char* const PanTiltUserCfgDir = "~/.roadnarrows";
+
+  //
+  // Pan-Tilt calibration XML file basename.
+  //
+  #ifdef PT_CALIB_XML
+  const char* const PanTiltCalibXml = PT_CALIB_XML; ///< xml calibration file
+  #else
+  const char* const PanTiltCalibXml = "pan_tilt_calib.xml";
+                                                    ///< xml calibration file
+  #endif
+
+  //
+  // Specific Pan-Tilt application configuration file basenames.
+  //
+  const char* const PanTiltPanelXml = "pan_tilt_panel.xml";
+                                          ///< pan_tilt_panel configuration
+  const char* const PanTiltEECamXml = "pan_tilt_eecam.xml";
+                                          ///< pan_tilt camera cfg
+  const char* const PanTiltXboxXml  = "pan_tilt_xbox.xml";
+                                          ///< pan_tilt teleop config
+
+  //
+  // XML stylesheet URL
+  //
+  #ifdef PT_XSL_URL
+  const char* const PanTiltXslUrl = PT_XSL_URL;      ///< xml stylesheet url
+  #else
+  const char* const PanTiltXslUrl =
+    "http://roadnarrows.com/xml/PanTilt/1.0/pan_tilt.xsl";
+                                                  ///< xml stylesheet url
+  #endif
+
+  //
+  // XML schema instance URL
+  //
+  #ifdef PT_XSI_URL
+  const char* const PanTiltXsiUrl = PT_XSI_URL; ///< xml schema instance url
+  #else
+  const char* const PanTiltXsiUrl =
+    "http://roadnarrows.com/xml/PanTilt/1.0/pan_tilt.xsd";
+                                                ///< xml schema instance url
+  #endif
+
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
