@@ -1217,9 +1217,7 @@ Make sure the workspace is clear of obstructions.""")
       jointTrajPoint.accelerations.append(0.0)
     dlg = MoveDlg(master=self, image='PanTiltInMotion.png',
                                 trajectory=jointTrajectory)
-    if not dlg.m_result:
-      return
-    else:
+    if dlg.m_result:
       self.moveRobot(jointTrajectory)
   
   #
