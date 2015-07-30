@@ -4,19 +4,21 @@
   <version>1.0.0</version>
 
   <description>
-    The RoadNarrows Robotics pan-tilt mechanism ROS metapackage
-    - provides complete hekateros software bundle.
+    The RoadNarrows Robotics Pan-Tilt mechanism ROS metapackage
+    - provides complete Pan-Tilt software bundle.
   </description>
 
-  <author email="robin.knight@roadnarrows.com">robin knight</author>
-  <author email="daniel@roadnarrows.com">daniel packard</author>
-  <maintainer email="daniel@roadnarrows.com">daniel packard</maintainer>
-  <license>BSD</license>
+  <author email="robin.knight@roadnarrows.com">Robin Knight</author>
+  <maintainer email="robin.knight@roadnarrows.com">Robin Knight</maintainer>
+  <license>MIT</license>
 
+  <url type="website">http://githum.com/roadnarrows-robotics/pan_tilt</url>
   <url type="website">http://roadnarrows.com</url>
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <run_depend>pan_tilt_control</run_depend>
+  <run_depend>pan_tilt_desc</run_depend>
   <!-- <run_depend>pan_tilt_moveit</run_depend> -->
 
   <export>

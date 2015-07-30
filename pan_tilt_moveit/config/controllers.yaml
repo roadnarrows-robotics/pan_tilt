@@ -1,0 +1,8 @@
+controller_list:
+ - name: pan_tilt_control
+   action_ns: follow_joint_traj_as
+   type: FollowJointTrajectory
+   default: true
+   joints:
+     - pan
+     - tilt

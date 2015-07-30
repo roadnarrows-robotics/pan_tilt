@@ -1,0 +1,5 @@
+controller_list:
+  - name: fake_pan_tilt_controller
+    joints:
+      - pan
+      - tilt

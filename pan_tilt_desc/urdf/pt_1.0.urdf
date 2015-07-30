@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<robot name="pan_tilt">
+
+  <link name="base_assembly">
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://pan_tilt_desc/stl/pt_1.0/pt_base_assembly.stl"
+            scale="1.0 1.0 1.0" />
+      </geometry>
+      <material name="tangerine">
+        <color rgba="0.95 0.52 0.0 0.95"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="pan_assembly">
+    <visual>
+      <!-- <origin xyz="-0.018 -0.031 -0.13" rpy="0.0 0.0 0.0"/> -->
+      <origin xyz="0.0 0.0 47.5" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://pan_tilt_desc/stl/pt_1.0/pt_pan_assembly.stl" 
+            scale="1.0 1.0 1.0" />
+      </geometry>
+      <material name="tangerine">
+        <color rgba="0.95 0.52 0.0 0.95"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="tilt_assembly">
+    <visual>
+      <!-- <origin xyz="0.0 -0.02 -0.50" rpy="0.0 0.0 0.0"/> -->
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 1.5708"/>
+      <geometry>
+        <mesh filename="package://pan_tilt_desc/stl/pt_1.0/pt_tilt_assembly.stl"
+            scale="1.0 1.0 1.0" />
+      </geometry>
+      <material name="tangerine">
+        <color rgba="0.95 0.52 0.0 0.95"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Change to end-effector/sensor in use as needed -->
+  <link name="tool_fake">
+    <visual>
+      <origin xyz="0.0 0.0 44.975" rpy="1.5708 0.0 0.0"/>
+      <geometry>
+        <cylinder radius="5.0" length="10.0" />
+      </geometry>
+      <material name="purps">
+        <color rgba="1.0 0.2 0.9 0.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="pan" type="revolute">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <parent link="base_assembly"/>
+    <child link="pan_assembly"/>
+
+    <!-- velocity 80 deg/sec, range(deg) [-150.0, 150.0]-->
+    <limit effort="90" velocity="1.396" lower="-2.618" upper="2.618" />
+  </joint>
+
+  <joint name="tilt" type="revolute">
+    <origin xyz="0 0 67.0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <parent link="pan_assembly"/>
+    <child link="tilt_assembly"/>
+
+    <!-- velocity 80 deg/sec, range(deg) [-150.0, 150.0]-->
+    <limit effort="90" velocity="1.396" lower="-2.618" upper="2.618" />
+  </joint>
+
+  <joint name="tool" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 0"/>
+    <parent link="tilt_assembly"/>
+    <child link="tool_fake"/>
+  </joint>
+
+
+  <!-- Platform Spec HERE -->
+
+</robot>
+

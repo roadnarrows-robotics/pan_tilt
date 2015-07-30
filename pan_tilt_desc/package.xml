@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <name>pan_tilt_desc</name>
+  <version>1.0.0</version>
+  <description>Provides urdf descriptions of RoadNarrows Pan-Tilt.</description>
+
+  <maintainer email="robin.knight@roadnarrows.com">Robin Knight</maintainer>
+  <license>MIT</license>
+
+  <url type="website">http://github.com/roadnarrows-robotics/pan_tilt</url>
+  <url type="website">http://roadnarrows.com</url>
+
+  <author email="robin.knight@roadnarrows.com">Robin Knight</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
