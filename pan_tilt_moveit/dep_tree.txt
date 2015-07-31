@@ -1,0 +1,34 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Dependency tree of MoveIt! generated and run-time files.
++
++ I need to document MoveIt! tangle weave.
++
++ Robin Knight
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+$ roslaunch pan_tilt_moveit pan_tilt.launch
+
+--> pan_tilt.launch
+  --> pan_tilt_moveit/launch/planning_context.launch
+    --> pan_tilt_desc/urdf/pt_1.0.urdf
+    --> pan_tilt_moveit/config/pan_tilt.srdf 
+    --> pan_tilt_moveit/config/joint_limits.yaml 
+    --> pan_tilt_moveit/config/kinematics.yaml 
+
+  --> pan_tilt_moveit/launch/move_group.launch
+    --> pan_tilt_moveit/launch/planning_pipeline.launch.xml 
+      --> pan_tilt_moveit/launch/ompl_planning_pipeline.launch.xml
+        --> pan_tilt_moveit/config/ompl_planning.yaml 
+    --> pan_tilt_moveit/launch/trajectory_execution.launch.xml 
+      --> pan_tilt_moveit/launch/pan_tilt_moveit_controller_manager.launch.xml 
+        --> pan_tilt_moveit/config/controllers.yaml 
+    --> pan_tilt_moveit/launch/sensor_manager.launch.xml 
+      --> pan_tilt_moveit/launch/pan_tilt_moveit_sensor_manager.launch.xml 
+
+  --> pan_tilt_moveit/launch/moveit_rviz.launch
+    --> pan_tilt_moveit/launch/moveit.rviz
+    --> pan_tilt_moveit/config/kinematics.yaml 
+
+  --> pan_tilt_moveit/launch/default_warehouse_db.launch
+        (default is don't launch)
+    *-> pan_tilt_moveit/launch/warehouse.launch

@@ -70,6 +70,7 @@
 //
 #include "ros/ros.h"
 #include "actionlib/server/simple_action_server.h"
+#include "control_msgs/FollowJointTrajectoryAction.h"
 
 //
 // ROS generated core, industrial, and pan-tilt messages.
@@ -103,6 +104,12 @@
 #include "pan_tilt_control/CalibrateAction.h"
 
 //
+// RoadNarrows
+//
+#include "rnr/rnrconfig.h"
+#include "rnr/log.h"
+
+//
 // RoadNarrows embedded pan-tilt library.
 //
 #include "pan_tilt/pan_tilt.h"
@@ -113,7 +120,7 @@
 //
 
 
-namespace pan_tilt
+namespace pan_tilt_control
 {
   /*!
    * \brief The class embodiment of the pan_tilt_control ROS node.
@@ -207,7 +214,7 @@ namespace pan_tilt
      *
      * \return Robot instance.
      */
-    PanTiltRobot &getRobot()
+    pan_tilt::PanTiltRobot &getRobot()
     {
       return m_robot;
     }
@@ -218,7 +225,7 @@ namespace pan_tilt
      * \param [in] state  Robot joint state.
      * \param [out] msg   Joint state message.
      */
-    void updateJointStateMsg(PanTiltJointStatePoint &state,
+    void updateJointStateMsg(pan_tilt::PanTiltJointStatePoint &state,
                              sensor_msgs::JointState &msg);
 
     /*!
@@ -228,7 +235,7 @@ namespace pan_tilt
      * \param [in] state  Robot joint state.
      * \param [out] msg   Extended joint state message.
      */
-    void updateExtendedJointStateMsg(PanTiltJointStatePoint &state,
+    void updateExtendedJointStateMsg(pan_tilt::PanTiltJointStatePoint &state,
                                      pan_tilt_control::JointStateExtended &msg);
 
     /*!
@@ -237,7 +244,7 @@ namespace pan_tilt
      * \param [in] status Robot status.
      * \param [out] msg   Robot status message.
      */
-    void updateRobotStatusMsg(PanTiltRobotStatus &status,
+    void updateRobotStatusMsg(pan_tilt::PanTiltRobotStatus &status,
                               industrial_msgs::RobotStatus &msg);
 
     /*!
@@ -246,12 +253,12 @@ namespace pan_tilt
      * \param [in] status Robot status.
      * \param [out] msg   Extended roobt status message.
      */
-    void updateExtendedRobotStatusMsg(PanTiltRobotStatus &status,
-                                   pan_tilt_control::RobotStatusExtended &msg);
+    void updateExtendedRobotStatusMsg(pan_tilt::PanTiltRobotStatus &status,
+                                      RobotStatusExtended &msg);
 
   protected:
     ros::NodeHandle  &m_nh;       ///< the node handler bound to this instance
-    PanTiltRobot     m_robot;     ///< real-time, pan-tilt robot mechanism
+    pan_tilt::PanTiltRobot  m_robot;  ///< real-time, pan-tilt robot mechanism
 
     // ROS services, publishers, subscriptions.
     MapServices       m_services;       ///< pan-tilt control services
@@ -261,12 +268,10 @@ namespace pan_tilt
     // Messages for published data.
     sensor_msgs::JointState               m_msgJointState;
                                               ///< joint state message
-    pan_tilt_control::JointStateExtended  m_msgJointStateEx;
-                                              ///< extended joint state message
+    JointStateExtended  m_msgJointStateEx; ///< extended joint state message
     industrial_msgs::RobotStatus          m_msgRobotStatus;
                                               ///< robot status message
-    pan_tilt_control::RobotStatusExtended m_msgRobotStatusEx;
-                                              ///< extended robot status message
+    RobotStatusExtended m_msgRobotStatusEx; ///< extended robot status message
 
     //..........................................................................
     // Service callbacks
@@ -443,7 +448,7 @@ namespace pan_tilt
     void execJointCmd(const trajectory_msgs::JointTrajectory &jt);
   };
 
-} // namespace pan_tilt
+} // namespace pan_tilt_control
 
 
 #endif // _PAN_TILT_CONTROL_H

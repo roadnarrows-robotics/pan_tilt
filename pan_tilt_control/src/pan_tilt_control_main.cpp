@@ -83,6 +83,7 @@
 
 using namespace ::std;
 using namespace pan_tilt;
+using namespace pan_tilt_control;
 
 //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 // Node Specific Defines and Data

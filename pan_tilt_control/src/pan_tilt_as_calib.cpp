@@ -92,6 +92,7 @@
 
 using namespace std;
 using namespace pan_tilt;
+using namespace pan_tilt_control;
 
 
 void ASCalibrate::execute_cb(

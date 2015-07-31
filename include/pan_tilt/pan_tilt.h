@@ -358,6 +358,16 @@ namespace pan_tilt
     PanTiltAsyncTaskStateWorking  = 1     ///< async task running
   };
 
+   /*!
+   * \brief Length/Distance Norm
+   */
+  enum PanTiltNorm
+  {
+    PanTiltNormL1   = 1,  ///< L1 norm (taxicab or manhattan norm)
+    PanTiltNormL2   = 2,  ///< L2 norm (Euclidean norm)
+    PanTiltNormLinf = 3   ///< Linf norm (maximum, infinity, or supremum norm)
+  };
+
   /*! \} */
 
 } // namespace pan_tilt

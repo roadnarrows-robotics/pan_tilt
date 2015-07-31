@@ -93,7 +93,7 @@
 #include "pan_tilt_control.h"
 
 
-namespace pan_tilt
+namespace pan_tilt_control
 {
   /*!
    * \brief Calibrate the pan-tilt robotic mechanism action server class.
@@ -166,6 +166,6 @@ namespace pan_tilt
     pan_tilt_control::CalibrateResult   result_;    ///< action results
   };
 
-} // namespace pan_tilt
+} // namespace pan_tilt_control
 
 #endif // _PAN_TILT_AS_CALIB_H
