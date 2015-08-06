@@ -17,9 +17,10 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <run_depend>libpan_tilt</run_depend>
   <run_depend>pan_tilt_control</run_depend>
   <run_depend>pan_tilt_desc</run_depend>
-  <!-- <run_depend>pan_tilt_moveit</run_depend> -->
+  <run_depend>pan_tilt_moveit</run_depend>
 
   <export>
     <metapackage/>
