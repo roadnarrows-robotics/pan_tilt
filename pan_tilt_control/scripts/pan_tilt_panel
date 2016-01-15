@@ -132,9 +132,17 @@ class window(Frame):
     # intialize window data
     kw = self.initData(kw)
 
+    self.m_imageLoader = ImageLoader(py_pkg='pan_tilt_control.images',
+                                      image_paths=imagePath)
+
     Frame.__init__(self, master=master, cnf=cnf, **kw)
     self.master.title("Pan-Tilt Control Panel")
     self.grid(row=0, column=0, padx=5, pady=5)
+
+    self.m_icons['app_icon'] = \
+                    self.m_imageLoader.load("icons/PanTiltPanelIcon.png")
+    self.master.tk.call('wm', 'iconphoto', self.master._w,
+        self.m_icons['app_icon'])
 
     # craete and show widgets
     self.createWidgets()
@@ -221,8 +229,6 @@ class window(Frame):
   ## \brief Create gui widgets with supporting data and show.
   #
   def createWidgets(self):
-    self.m_imageLoader = ImageLoader(py_pkg='pan_tilt_control.images',
-                                      image_paths=imagePath)
     self.createHeading()
     self.createLeftButtons()
     self.createCenterPanel()
