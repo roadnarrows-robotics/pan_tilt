@@ -19,7 +19,7 @@
  * \author Robin Knight (robin.knight@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014-2015  RoadNarrows
+ * (C) 2014-2016  RoadNarrows
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
@@ -80,6 +80,7 @@
 //
 #include "pan_tilt_control.h"
 #include "pan_tilt_as_calib.h"
+#include "pan_tilt_as_follow_traj.h"
 
 using namespace ::std;
 using namespace pan_tilt;
@@ -330,7 +331,8 @@ int main(int argc, char *argv[])
   //
   // Create Action Servers
   //
-  ASCalibrate asCalib("calibrate_as", pantilt);
+  ASCalibrate         asCalib("calibrate_as", pantilt);
+  ASFollowTrajectory  asFollowTrajectory("follow_joint_traj_as", pantilt);
 
   ROS_INFO("%s: Action servers created.", strNodeName.c_str());
 
