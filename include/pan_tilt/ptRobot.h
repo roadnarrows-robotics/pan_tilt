@@ -213,7 +213,7 @@ namespace pan_tilt
      *
      * \param fMinPos   Pan minimum end position (radians).
      * \param fMaxPos   Pan maximum end position (radians).
-     * \param fVelocity Pan velocity (percent of maximum).
+     * \param fVelocity Pan velocity (radians/second).
      *
      * \copydoc doc_return_std
      */
@@ -227,10 +227,10 @@ namespace pan_tilt
      *
      * \param fPanMinPos    Pan minimum end position (radians).
      * \param fPanMaxPos    Pan maximum end position (radians).
-     * \param fPanVel       Pan velocity (percent of maximum).
+     * \param fPanVel       Pan velocity (radians/second).
      * \param fTiltMinPos   Tilt minimum end position (radians).
      * \param fTiltMaxPos   Tilt maximum end position (radians).
-     * \param fTiltVel      Tilt velocity (percent of maximum).
+     * \param fTiltVel      Tilt velocity (radians/second).
      *
      * \copydoc doc_return_std
      */
@@ -695,7 +695,7 @@ namespace pan_tilt
     int jointVelocityToRawSpeed(PanTiltRobotJoint &joint,
                                 int                nOdGoalPos,
                                 double             fVelocity,
-                                units_t            units=units_percent);
+                                units_t            units=units_rad_per_s);
 
     /*!
      * \brief Get the current joint position.
@@ -738,7 +738,7 @@ namespace pan_tilt
      * \return Joint velocity in the given units.
      */
     double getCurJointVelocity(PanTiltRobotJoint &joint,
-                               units_t            units=units_percent);
+                               units_t            units=units_rad_per_s);
 
     /*!
      * \brief Convert servo raw speed to joint velocity.
@@ -751,7 +751,7 @@ namespace pan_tilt
      */
     double rawSpeedToJointVelocity(PanTiltRobotJoint &joint,
                                    int                nOdPos,
-                                   units_t            units=units_percent);
+                                   units_t            units=units_rad_per_s);
 
   protected:
     // state

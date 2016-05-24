@@ -17,8 +17,8 @@
  * \author Daniel Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014-2015  RoadNarrows
- * (http://www.RoadNarrows.com)
+ * (C) 2014-2016  RoadNarrows LLC
+ * (http://www.noadnarrows.com)
  * \n All Rights Reserved
  */
 /*
@@ -465,7 +465,8 @@ int PanTiltRobot::gotoZeroPtPos(bool bOverride)
     nMasterServoId  = iter->first;
     pJoint          = &(iter->second);
 
-    trajPoint.append(pJoint->m_strName, pJoint->m_fCalibPosRads, 25.0);
+    trajPoint.append(pJoint->m_strName, pJoint->m_fCalibPosRads,
+                                      degToRad(25.0));
   }
 
   if( (rc = move(trajPoint, bOverride)) < 0 )
@@ -511,7 +512,7 @@ int PanTiltRobot::pan(double fMinPos, double fMaxPos, double fVelocity)
     return -PT_ECODE_BAD_VAL;
   }
 
-  if( fVelocity < 2.0 )
+  if( fVelocity < degToRad(1.0) )
   {
     LOGERROR("Pan velocity %lf to small.", fVelocity);
     return -PT_ECODE_BAD_VAL;
@@ -573,7 +574,7 @@ int PanTiltRobot::sweep(double fPanMinPos,  double fPanMaxPos,  double fPanVel,
     return -PT_ECODE_BAD_VAL;
   }
 
-  if( fPanVel < 2.0 )
+  if( fPanVel < degToRad(1.0) )
   {
     LOGERROR("Pan velocity %lf to small.", fPanVel);
     return -PT_ECODE_BAD_VAL;
@@ -602,7 +603,7 @@ int PanTiltRobot::sweep(double fPanMinPos,  double fPanMaxPos,  double fPanVel,
     return -PT_ECODE_BAD_VAL;
   }
 
-  if( fTiltVel < 2.0 )
+  if( fTiltVel < degToRad(1.0) )
   {
     LOGERROR("Tilt velocity %lf to small.", fTiltVel);
     return -PT_ECODE_BAD_VAL;
@@ -827,7 +828,7 @@ int PanTiltRobot::move(PanTiltJointTrajectoryPoint &trajectoryPoint,
     // convert to raw values
     nOdPos    = jointPositionToOdPos(*pJoint, fPosition, units_radians);
     nRawSpeed = jointVelocityToRawSpeed(*pJoint, nOdPos, fVelocity,
-                                                          units_percent);
+                                                         units_rad_per_s);
 
     // test if effectively already at the goal position
     if( iabs(nOdPos - pServo->GetOdometer()) < TuneDeltaPos )
@@ -2114,10 +2115,10 @@ int PanTiltRobot::asyncThExecCalibrate()
 
 int PanTiltRobot::asyncThExecPan()
 {
-  static useconds_t TuneTPanDir   = 200000;   // 0.2 seconds for changing dir
-  static useconds_t TuneTPan      = 100000;   // 0.1 seconds
-  static double     TuneDeltaVel  = 0.5;      // 0.5 percent
-  static int        TuneStopCnt   = 3;        // max consecutive stops
+  static useconds_t TuneTPanDir   = 200000;         // 0.2 seconds to change dir
+  static useconds_t TuneTPan      = 100000;         // 0.1 seconds
+  static double     TuneDeltaVel  = degToRad(0.2);  // 0.2 deg/s
+  static int        TuneStopCnt   = 3;              // max consecutive stops
 
   PanTiltJointTrajectoryPoint  *pTraj;
   string                        strPan("pan");
@@ -2142,8 +2143,8 @@ int PanTiltRobot::asyncThExecPan()
   {
     pTraj[i][0].get(strPan, fTgtPos, fTgtVel, fTgtAccel);
 
-    fprintf(stderr, "[%d] TgtPos=%.2fdeg, TgtVel=%.2f%%\n",
-          i, radToDeg(fTgtPos), fTgtVel);
+    //fprintf(stderr, "[%d] TgtPos=%.2lfdeg, TgtVel=%.2lfdeg/s\n",
+    //      i, radToDeg(fTgtPos), radToDeg(fTgtVel));
 
     rc = move(pTraj[i], false);
 
@@ -2158,8 +2159,8 @@ int PanTiltRobot::asyncThExecPan()
       fCurVel = getCurJointVelocity(*pJoint);
       cnt = fabs(fCurVel) > TuneDeltaVel? 0: cnt+1;
       t = TuneTPan;
-      fprintf(stderr, "  CurPos=%.2fdeg, CurVel=%.2f%%, StopCnt=%d\n",
-          radToDeg(fCurPos), fCurVel, cnt);
+      //fprintf(stderr, "  CurPos=%.2lfdeg, CurVel=%.2lfdeg/s StopCnt=%d\n",
+      //    radToDeg(fCurPos), radToDeg(fCurVel), cnt);
     } while( cnt < TuneStopCnt );
 
     i = (i + 1) % 2;
@@ -2170,10 +2171,10 @@ int PanTiltRobot::asyncThExecPan()
 
 int PanTiltRobot::asyncThExecSweep()
 {
-  static useconds_t TuneT         = 100000;   // 0.1 seconds
-  static useconds_t TuneTDir      = 200000;   // 0.2 seconds
-  static double     TuneDeltaPos  = 0.0087;   // 0.5 degrees
-  static double     TuneDeltaVel  = 5.0;      // 5.0 percent
+  static useconds_t TuneT         = 100000;         // 0.1 seconds
+  static useconds_t TuneTDir      = 200000;         // 0.2 seconds
+  static double     TuneDeltaPos  = 0.0087;         // 0.5 degrees
+  static double     TuneDeltaVel  = degToRad(0.2);  // 0.2 deg/s
 
   PanTiltJointTrajectoryPoint  *pTraj;
   string                        strName;

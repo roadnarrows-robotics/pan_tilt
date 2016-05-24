@@ -19,7 +19,7 @@
  * \author Robin Knight (robin.knight@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014-2015  RoadNarrows
+ * (C) 2014-2016  RoadNarrows LLC
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
@@ -298,7 +298,11 @@ bool PanTiltControl::pan(Pan::Request  &req,
 
   rc = m_robot.pan(req.min_pos, req.max_pos, req.velocity);
 
-  ROS_INFO("Panning from %lf to %lf.", req.min_pos, req.max_pos);
+  ROS_INFO("Panning from %.3lf(%.1lf degs) to %.3lf(%.1lf degs).",
+      req.min_pos,
+      radToDeg(req.min_pos),
+      req.max_pos,
+      radToDeg(req.max_pos));
 
   return rc == PT_OK? true: false;
 }
@@ -355,8 +359,16 @@ bool PanTiltControl::sweep(Sweep::Request  &req,
   rc = m_robot.sweep(req.pan_min_pos, req.pan_max_pos, req.pan_velocity,
                      req.tilt_min_pos, req.tilt_max_pos, req.tilt_velocity);
 
-  ROS_INFO("Sweep from %lf to %lf and %lf to %lf.",
-          req.pan_min_pos, req.pan_max_pos, req.tilt_min_pos, req.tilt_max_pos);
+  ROS_INFO("Sweeping pan from %.3lf(%.1lf deg) to %.3lf(%.1lf deg) "
+           "         tilt from %.3lf(%.1lf deg) to %.3lf(%.1lf deg).",
+          req.pan_min_pos,
+          radToDeg(req.pan_min_pos),
+          req.pan_max_pos,
+          radToDeg(req.pan_max_pos),
+          req.tilt_min_pos,
+          radToDeg(req.tilt_min_pos),
+          req.tilt_max_pos,
+          radToDeg(req.tilt_max_pos));
 
   return rc == PT_OK? true: false;
 }
@@ -600,9 +612,12 @@ void PanTiltControl::execJointCmd(const trajectory_msgs::JointTrajectory &jt)
     pt.append(jt.joint_names[j],
               jt.points[0].positions[j], 
               jt.points[0].velocities[j]);
-    ROS_INFO("%s: pos=%5.3f speed=%2.1f", jt.joint_names[j].c_str(), 
-                                          jt.points[0].positions[j], 
-                                          jt.points[0].velocities[j]);
+    ROS_INFO("%s: pos=%.3lf(%.1lf deg) vel=%.3lf(%.1lfdeg/s)",
+        jt.joint_names[j].c_str(), 
+        jt.points[0].positions[j], 
+        radToDeg(jt.points[0].positions[j]),
+        jt.points[0].velocities[j],
+        radToDeg(jt.points[0].velocities[j]));
   }
 
   m_robot.move(pt);

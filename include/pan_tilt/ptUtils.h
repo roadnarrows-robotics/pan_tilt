@@ -18,7 +18,7 @@
  * \author Robin Knight   (robin.knight@roadnarrows.com)
  *
  * \par Copyright
- * (C) 2014-2015  RoadNarrows
+ * (C) 2014-2016  RoadNarrows LLC
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */

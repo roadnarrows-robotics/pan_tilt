@@ -18,7 +18,7 @@
  * \author Robin Knight (robin.knight@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2015-2016  RoadNarrows
+ * (C) 2015-2016  RoadNarrows LLC
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
@@ -123,7 +123,7 @@ static const char *NormName(PanTiltNorm eNorm)
 void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
                                                                           goal)
 {
-  double    fHz = 10.0;   // feedback fequency
+  double    fHz = 60.0;   // feedback fequency
   double    fDistOrigin;  // distance from first waypoint to robot position
   ssize_t   iWaypoint;    // working waypoint index
 
@@ -134,7 +134,7 @@ void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
   m_eNorm     = PanTiltNormL1;
   m_fEpsilon  = degToRad(5.0);
 
-  ROS_INFO("  norm=%s, epsilon=%6.3lf(%7.2lf deg).",
+  ROS_INFO("  norm=%s, epsilon=%.3lf(%.2lf deg).",
       NormName(m_eNorm), m_fEpsilon, radToDeg(m_fEpsilon));
 
   // the joint goal trajectory path
@@ -156,8 +156,8 @@ void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
   else if( (fDistOrigin = measureDist(0)) > m_fEpsilon )
   {
     ROS_ERROR("Starting waypoint is not near the current robot position.");
-    ROS_ERROR("%s distance from current position is %6.3lf(%7.2lf deg) > "
-              "epsilon=%6.3lf(%7.2lf deg).",
+    ROS_ERROR("%s distance from current position is %.3lf(%.1lf deg) > "
+              "epsilon=%.3lf(%.2lf deg).",
               NormName(m_eNorm),
               fDistOrigin, radToDeg(fDistOrigin),
               m_fEpsilon,  radToDeg(m_fEpsilon));
@@ -269,27 +269,19 @@ void ASFollowTrajectory::groomWaypoint(ssize_t iWaypoint)
 {
   static double TuneNonZeroVel= degToRad(0.2);    // non-zero velocity threshold
   static double TuneMinVel    = degToRad(5.0);    // minimum absolute velocity
-  static double TuneOptMaxVel = degToRad(60.0);   // optimal max abs velocity
-  static double TuneMaxVel    = degToRad(150.0);  // maximum absolute velocity
+  static double TuneMaxVel    = degToRad(120.0);  // maximum absolute velocity
 
   size_t  len;        // vector length
   size_t  j;          // working index
   double  v;          // [absolute] joint velocity
-  double  fMinVel;    // V non-zero minimum element
-  double  fMaxVel;    // V non-zero maximum element
-  double  scale;      // V scaling
 
   len     = m_traj.joint_names.size();
-  fMinVel = TuneMinVel;
-  fMaxVel = 0.0;
 
   //
   // Characterize velocity V
   //
   for(j=0; j<len; ++j)
   {
-    v = fabs(m_traj.points[iWaypoint].velocities[j]);
-
     // special endpoint case
     if( (iWaypoint == m_iEndpoint) && (iWaypoint > 0) && (v < TuneNonZeroVel) )
     {
@@ -299,63 +291,21 @@ void ASFollowTrajectory::groomWaypoint(ssize_t iWaypoint)
       v = fabs(m_traj.points[iWaypoint].velocities[j]);
     }
 
-    // test for new non-zero minimum and maximum
-    if( v >= TuneNonZeroVel )
+    else
     {
-      if( (v < fMinVel) )
-      {
-        fMinVel = v;
-      }
-      if( (v > fMaxVel) )
-      {
-        fMaxVel = v;
-      }
+      v = fabs(m_traj.points[iWaypoint].velocities[j]);
     }
-  }
 
-  // 
-  // Scale up V to acceptable robot optimal velocities.
-  //
-  if( (fMaxVel >= TuneNonZeroVel) && (fMaxVel < TuneOptMaxVel) )
-  {
-    scale = TuneOptMaxVel / fMaxVel;
-    for(j=0; j<len; ++j)
-    {
-      m_traj.points[iWaypoint].velocities[j] *= scale;
-    }
-  }
-  
-  // 
-  // Scale up V to acceptable robot minimum velocities.
-  // Note: An alternative to scaling to optimal.
-  //
-  //if( fMinVel < TuneMinVel )
-  //{
-  //  scale = TuneMinVel / fMinVel;
-  //  for(j=0; j<len; ++j)
-  //  {
-  //    m_traj.points[iWaypoint].velocities[j] *= scale;
-  //  }
-  //}
-  
-  //
-  // Finally cap V velocities at a maximum. Note that this can lead to slight
-  // trajectory distortions since the velocities in V are no longer in the
-  // original proportions. Should be okay though.
-  //
-  for(j=0; j<len; ++j)
-  {
-    v = m_traj.points[iWaypoint].velocities[j];
-    m_traj.points[iWaypoint].velocities[j] = fcap(v, -TuneMaxVel, TuneMaxVel);
+    m_traj.points[iWaypoint].velocities[j] = fcap(v, 0.0, TuneMaxVel);
   }
 }
 
 ASFollowTrajectory::ExecState ASFollowTrajectory::startMoveToPoint(
                                                         ssize_t iWaypoint)
 {
-  PanTiltJointTrajectoryPoint pt;   // pan_tilt joint point
-  size_t                  j;    // working index
-  int                     rc;   // return code
+  PanTiltJointTrajectoryPoint pt; // pan_tilt joint point
+  size_t                  j;      // working index
+  int                     rc;     // return code
 
   ROS_INFO("+ Waypoint %zd of %zd", iWaypoint, m_iNumWaypoints);
 
@@ -371,7 +321,7 @@ ASFollowTrajectory::ExecState ASFollowTrajectory::startMoveToPoint(
               m_traj.points[iWaypoint].velocities[j]);
 
     // RDK really ROS_DEBUG
-    ROS_INFO("    %-12s: pos=%6.3lf(%7.2lf deg) vel=%6.3lf(%6.1lf deg/sec)",
+    ROS_INFO("    %-6s: pos=%.3lf(%.1lf deg) vel=%.3lf(%.1lf deg/sec)",
       m_traj.joint_names[j].c_str(), 
       m_traj.points[iWaypoint].positions[j], 
       radToDeg(m_traj.points[iWaypoint].positions[j]), 

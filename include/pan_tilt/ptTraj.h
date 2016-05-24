@@ -17,8 +17,8 @@
  * \author Daniel Packard (daniel@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014-2015  RoadNarrows
- * (http://www.RoadNarrows.com)
+ * (C) 2014-2016  RoadNarrows LLC
+ * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
 /*
@@ -93,9 +93,9 @@ namespace pan_tilt
      * \brief Initialization constructor.
      *
      * \param strName       Joint name.
-     * \param fPosition     Joint position.
-     * \param fVelocity     Joint velocity.
-     * \param fAcceleration Joint acceleration.
+     * \param fPosition     Joint position (radians).
+     * \param fVelocity     Joint velocity (radians/second).
+     * \param fAcceleration Joint acceleration (radians/s^2).
      */
     PanTiltJointTraj(const std::string &strName,
                   const double       fPosition,
@@ -149,9 +149,9 @@ namespace pan_tilt
      * \brief Get joint point data.
      *
      * \param [out] strName       Joint name.
-     * \param [out] fPosition     Joint position.
-     * \param [out] fVelocity     Joint velocity.
-     * \param [out] fAcceleration Joint acceleration.
+     * \param [out] fPosition     Joint position (radians).
+     * \param [out] fVelocity     Joint velocity (radians/second).
+     * \param [out] fAcceleration Joint acceleration (radians/s^2).
      */
     void get(std::string &strName,
              double      &fPosition,
@@ -167,8 +167,8 @@ namespace pan_tilt
   protected:
     std::string m_strName;        ///< joint name
     double      m_fPosition;      ///< joint position (radians)
-    double      m_fVelocity;      ///< joint velocity (% of maximum)
-    double      m_fAcceleration;  ///< joint acceleration (not used)
+    double      m_fVelocity;      ///< joint velocity (radians/second)
+    double      m_fAcceleration;  ///< joint acceleration (r/s^2) (not used)
   };
 
 
@@ -264,9 +264,9 @@ namespace pan_tilt
      * \brief Append joint point to end of trajectory.
      *
      * \param strName       Joint name.
-     * \param fPosition     Joint position.
-     * \param fVelocity     Joint velocity.
-     * \param fAcceleration Joint acceleration.
+     * \param fPosition     Joint position (radians).
+     * \param fVelocity     Joint velocity (radians/second).
+     * \param fAcceleration Joint acceleration (radians/s^2).
      */
     void append(const std::string &strName,
                 double             fPosition,

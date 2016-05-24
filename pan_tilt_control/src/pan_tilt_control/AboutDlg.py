@@ -70,17 +70,21 @@ class AboutDlg(Toplevel):
     # allows the enter button to fire either button's action
     self.m_bttnOk.bind('<KeyPress-Return>', func=self.close)
 
-    # center the dialog over parent panel
+    # parent widget's window geometry
     if master is not None:
-      self.update_idletasks()
-      x0 = master.winfo_rootx()
-      y0 = master.winfo_rooty()
-      xp = x0 + (master.winfo_width() - self.winfo_width()) / 2 - 8
-      yp = y0 + (master.winfo_height() - self.winfo_height()) / 2 - 20
-      glist = [self.winfo_width(), self.winfo_height(), xp, yp]
-      #self.withdraw() # hide the dialog until position and size is set
-      self.geometry('{0}x{1}+{2}+{3}'.format(*glist))
-      #self.deiconify() # now show
+      self.m_parentGeo = [master.winfo_width(), master.winfo_height(),
+                          master.winfo_rootx(), master.winfo_rooty()]
+    else:
+      self.m_parentGeo = [400, 400, 400, 400]
+
+    #print 'DBG: Parent geometry = {0}x{1}+{2}+{3}'.format(*self.m_parentGeo)
+
+    # Set a good location for this dialog overlaying on top of the parent's
+    # geometry. This is a compromise in that this dialog's geometry has not
+    # been determined yet.
+    glist= [self.m_parentGeo[2] + self.m_parentGeo[0]/4,
+            self.m_parentGeo[3]]
+    self.geometry('+{0}+{1}'.format(*glist))
 
     # start with ok button focused
     #self.m_bttnOk.focus_set()

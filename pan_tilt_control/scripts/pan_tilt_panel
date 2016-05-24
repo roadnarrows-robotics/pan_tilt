@@ -21,7 +21,7 @@
 ## \author Robin Knight (robin.knight@roadnarrows.com)
 ##  
 ## \par Copyright:
-##   (C) 2014-2015.  RoadNarrows LLC.\n
+##   (C) 2014-2016.  RoadNarrows LLC.\n
 ##   (http://www.roadnarrows.com)\n
 ##   All Rights Reserved
 ##
@@ -81,7 +81,7 @@ from pan_tilt_control.ACCalibrate import *
 # ------------------------------------------------------------------------------
 
 ## \brief Application version. Update as needed. 
-appVersion = '1.1.0'
+appVersion = '1.2.0'
 
 ## \brief Image search paths.
 imagePath = [
@@ -112,6 +112,9 @@ fgColors = {
 
 ## \brief no servo id
 DYNA_ID_NONE = 255
+
+NavVel = degToRad(20.0)
+
 
 # ------------------------------------------------------------------------------
 # Class window
@@ -203,7 +206,7 @@ class window(Frame):
         'encoder':
           {'hdr0': 'Encoder',   'hdr1': '(ticks)  ',  'width': 12,  'align': E},
         'velocity':
-          {'hdr0': 'Velocity',  'hdr1': '(%)    ',    'width': 10,  'align': E},
+          {'hdr0': 'Velocity',  'hdr1': '(deg/s)  ',    'width': 10,  'align': E},
         'speed':
           {'hdr0': 'Speed',     'hdr1': '(raw) ',     'width': 6,   'align': E},
         'effort':
@@ -1171,7 +1174,7 @@ Make sure the workspace is clear of obstructions.""")
       velocity  = Float64()
       min_pos   = degToRad(self.m_config['pan']['pan_min_pos'])
       max_pos   = degToRad(self.m_config['pan']['pan_max_pos'])
-      velocity  = self.m_config['pan']['pan_vel']
+      velocity  = degToRad(self.m_config['pan']['pan_vel'])
       pan_forever(min_pos, max_pos, velocity)
     except rospy.ServiceException, e:
       self.showError("Pan failed: %s." % (e.message))
@@ -1197,10 +1200,10 @@ Make sure the workspace is clear of obstructions.""")
       tilt_velocity = Float64()
       pan_min_pos   = degToRad(self.m_config['sweep']['pan_min_pos'])
       pan_max_pos   = degToRad(self.m_config['sweep']['pan_max_pos'])
-      pan_velocity  = self.m_config['sweep']['pan_vel']
+      pan_velocity  = degToRad(self.m_config['sweep']['pan_vel'])
       tilt_min_pos  = degToRad(self.m_config['sweep']['tilt_min_pos'])
       tilt_max_pos  = degToRad(self.m_config['sweep']['tilt_max_pos'])
-      tilt_velocity = self.m_config['sweep']['tilt_vel']
+      tilt_velocity = degToRad(self.m_config['sweep']['tilt_vel'])
       sweep_forever(pan_min_pos,  pan_max_pos,  pan_velocity,
                     tilt_min_pos, tilt_max_pos, tilt_velocity)
     except rospy.ServiceException, e:
@@ -1239,7 +1242,7 @@ Make sure the workspace is clear of obstructions.""")
         dpos = degToRad(2.0)
       else:
         dpos = degToRad(30.0)
-      self.tiltUp(dpos, 10.0, 100)
+      self.tiltUp(dpos, NavVel, 100)
 
   #
   ## \brief Keyboard Down key event.
@@ -1254,7 +1257,7 @@ Make sure the workspace is clear of obstructions.""")
         dpos = degToRad(2.0)
       else:
         dpos = degToRad(30.0)
-      self.tiltDown(dpos, 10.0, 100)
+      self.tiltDown(dpos, NavVel, 100)
 
   #
   ## \brief Keyboard Left key event.
@@ -1269,7 +1272,7 @@ Make sure the workspace is clear of obstructions.""")
         dpos = degToRad(2.0)
       else:
         dpos = degToRad(30.0)
-      self.panLeft(dpos, 10.0, 100)
+      self.panLeft(dpos, NavVel, 100)
 
   #
   ## \brief Keyboard Right key event.
@@ -1284,7 +1287,7 @@ Make sure the workspace is clear of obstructions.""")
         dpos = degToRad(2.0)
       else:
         dpos = degToRad(30.0)
-      self.panRight(dpos, 10.0, 100)
+      self.panRight(dpos, NavVel, 100)
 
   #
   ## \brief Mouse Nav Up button press event.
@@ -1293,7 +1296,7 @@ Make sure the workspace is clear of obstructions.""")
   #
   def mouseNavUp(self, event):
     #print 'mouseNavUp'
-    self.tiltUp(degToRad(180.0), 10.0, 0)
+    self.tiltUp(degToRad(180.0), NavVel, 0)
 
   #
   ## \brief Mouse Nav Down button press event.
@@ -1302,7 +1305,7 @@ Make sure the workspace is clear of obstructions.""")
   #
   def mouseNavDown(self, event):
     #print 'mouseNavDown'
-    self.tiltDown(degToRad(180.0), 10.0, 0)
+    self.tiltDown(degToRad(180.0), NavVel, 0)
 
   #
   ## \brief Mouse Nav Left button press event.
@@ -1311,7 +1314,7 @@ Make sure the workspace is clear of obstructions.""")
   #
   def mouseNavLeft(self, event):
     #print 'mouseNavLeft'
-    self.panLeft(degToRad(360.0), 10.0, 0)
+    self.panLeft(degToRad(360.0), NavVel, 0)
 
   #
   ## \brief Mouse Nav Right button press event.
@@ -1320,7 +1323,7 @@ Make sure the workspace is clear of obstructions.""")
   #
   def mouseNavRight(self, event):
     #print 'mouseNavRight'
-    self.panRight(degToRad(360.0), 10.0, 0)
+    self.panRight(degToRad(360.0), NavVel, 0)
 
   #
   ## \brief Mouse navigation button release event.
@@ -1335,7 +1338,7 @@ Make sure the workspace is clear of obstructions.""")
   ## \brief Tilt up.
   ##
   ## \param dpos  Delta position from current position (absolute value radians).
-  ## \param vel   Velocity (percent)
+  ## \param vel   Velocity (radians/second)
   ## \param msec  Auto-stop in msec milliseconds. Zero (0) = no auto-stop.
   #
   def tiltUp(self, dpos, vel, msec):
@@ -1349,7 +1352,7 @@ Make sure the workspace is clear of obstructions.""")
   ## \brief Tilt down.
   ##
   ## \param dpos  Delta position from current position (absolute value radians).
-  ## \param vel   Velocity (percent)
+  ## \param vel   Velocity (radians/second)
   ## \param msec  Auto-stop in msec milliseconds. Zero (0) = no auto-stop.
   #
   def tiltDown(self, dpos, vel, msec):
@@ -1363,7 +1366,7 @@ Make sure the workspace is clear of obstructions.""")
   ## \brief Pan left.
   ##
   ## \param dpos  Delta position from current position (absolute value radians).
-  ## \param vel   Velocity (percent)
+  ## \param vel   Velocity (radians/second)
   ## \param msec  Auto-stop in msec milliseconds. Zero (0) = no auto-stop.
   #
   def panLeft(self, dpos, vel, msec):
@@ -1377,7 +1380,7 @@ Make sure the workspace is clear of obstructions.""")
   ## \brief Pan right.
   ##
   ## \param dpos  Delta position from current position (absolute value radians).
-  ## \param vel   Velocity (percent)
+  ## \param vel   Velocity (radians/second)
   ## \param msec  Auto-stop in msec milliseconds. Zero (0) = no auto-stop.
   #
   def panRight(self, dpos, vel, msec):
@@ -1392,7 +1395,7 @@ Make sure the workspace is clear of obstructions.""")
   ## \brief Make trajectory message from keywords.
   ## 
   ## \param kw  Keywords: name:[pos, vel] with pos in radians, and vel in
-  ##            percent.
+  ##            radians/second.
   ## \return Return joint trajectory message.
   #
   def makeTrajectory(self, **kw):
@@ -1938,8 +1941,8 @@ The pan-tilt may fall if not in a stable position.""")
     deg = math.degrees(rad)
     return "%.2f" % (deg), fgColors['normal']
 
-  def toVelocity(self, percent):
-    return "%.1f" % (percent), fgColors['normal']
+  def toVelocity(self, rps):
+    return "%.1f" % radToDeg(rps), fgColors['normal']
 
   def toEffort(self, effort):
     absraw = math.fabs(effort)
