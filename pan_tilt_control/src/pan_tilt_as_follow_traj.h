@@ -195,9 +195,10 @@ namespace pan_tilt_control
                                     ///< action results
 
     // pan_tilt robot and parameters
-    pan_tilt::PanTiltRobot &m_robot;      ///< pan_tilt robot
-    pan_tilt::PanTiltNorm   m_eNorm;      ///< waypoint distance norm
-    double                  m_fEpsilon;   ///< waypoint distance epsilon
+    pan_tilt::PanTiltRobot &m_robot;        ///< pan_tilt robot
+    pan_tilt::PanTiltNorm   m_eNorm;        ///< joint point distance norm
+    double                  m_fEpsilonWp;   ///< waypoint distance epsilon
+    double                  m_fEpsilonEp;   ///< endpoint distance epsilon
 
     // goal trajectory
     trajectory_msgs::JointTrajectory m_traj;  ///< goal trajectory
@@ -217,7 +218,7 @@ namespace pan_tilt_control
      *
      * \param iWaypoint   Current waypoint along the trajectoy path.
      */
-    ssize_t nextWaypoint(ssize_t iWaypoint);
+    ssize_t nextWaypoint(ssize_t iCurpoint);
 
     /*!
      * \brief Groom waypoint before issuing a move to the waypoint.

@@ -131,11 +131,15 @@ void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
       goal->trajectory.points.size());
 
   // get current trajectory parameters
-  m_eNorm     = PanTiltNormL1;
-  m_fEpsilon  = degToRad(5.0);
+  m_eNorm       = PanTiltNormL1;
+  m_fEpsilonWp  = degToRad(10.0);
+  m_fEpsilonEp  = degToRad(2.0);
 
-  ROS_INFO("  norm=%s, epsilon=%.3lf(%.2lf deg).",
-      NormName(m_eNorm), m_fEpsilon, radToDeg(m_fEpsilon));
+  ROS_INFO("  norm=%s, epsilon_wp=%.3lf(%.2lf deg), "
+      "epsilon_ep=%.3lf(%.2lf deg).",
+      NormName(m_eNorm),
+      m_fEpsilonWp, radToDeg(m_fEpsilonWp),
+      m_fEpsilonEp, radToDeg(m_fEpsilonEp));
 
   // the joint goal trajectory path
   m_traj = goal->trajectory;
@@ -152,15 +156,15 @@ void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
     return;
   }
 
-  // too far away
-  else if( (fDistOrigin = measureDist(0)) > m_fEpsilon )
+  // starting enpoint is too far away
+  else if( (fDistOrigin = measureDist(0)) > m_fEpsilonEp )
   {
     ROS_ERROR("Starting waypoint is not near the current robot position.");
     ROS_ERROR("%s distance from current position is %.3lf(%.1lf deg) > "
-              "epsilon=%.3lf(%.2lf deg).",
+              "epsilon_ep=%.3lf(%.2lf deg).",
               NormName(m_eNorm),
               fDistOrigin, radToDeg(fDistOrigin),
-              m_fEpsilon,  radToDeg(m_fEpsilon));
+              m_fEpsilonEp,  radToDeg(m_fEpsilonEp));
     result_.error_code = FollowJointTrajectoryResult::INVALID_GOAL;
     as_.setAborted(result_);
     return;
@@ -244,22 +248,24 @@ void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
   }
 }
 
-ssize_t ASFollowTrajectory::nextWaypoint(ssize_t iWaypoint)
+ssize_t ASFollowTrajectory::nextWaypoint(ssize_t iCurpoint)
 {
+  ssize_t iWaypoint = iCurpoint + 1;
+
   while( iWaypoint < m_iEndpoint )
   {
-    ++iWaypoint;
-
     // waypoint sufficiently far away.
-    if( measureDist(iWaypoint) >= m_fEpsilon )
+    if( measureDist(iWaypoint) >= m_fEpsilonWp )
     {
       break;
     }
     
-    else if( iWaypoint < m_iEndpoint )
+    else
     {
-      ROS_INFO("+ Skipping waypoint %zd of %zd.", iWaypoint, m_iNumWaypoints);
+      ROS_INFO("+ Skipping waypoint %zd/%zd.", iWaypoint, m_iEndpoint);
     }
+
+    ++iWaypoint;
   }
 
   return iWaypoint;
@@ -282,18 +288,14 @@ void ASFollowTrajectory::groomWaypoint(ssize_t iWaypoint)
   //
   for(j=0; j<len; ++j)
   {
-    // special endpoint case
+    v = fabs(m_traj.points[iWaypoint].velocities[j]);
+
+    //
+    // Special final endpoint case. 
+    //
     if( (iWaypoint == m_iEndpoint) && (iWaypoint > 0) && (v < TuneNonZeroVel) )
     {
-      // copy velocity from previous waypoint
-      m_traj.points[iWaypoint].velocities[j] =
-                                    m_traj.points[iWaypoint-1].velocities[j];
-      v = fabs(m_traj.points[iWaypoint].velocities[j]);
-    }
-
-    else
-    {
-      v = fabs(m_traj.points[iWaypoint].velocities[j]);
+      v = fabs(m_traj.points[iWaypoint-1].velocities[j]);
     }
 
     m_traj.points[iWaypoint].velocities[j] = fcap(v, 0.0, TuneMaxVel);
@@ -307,7 +309,7 @@ ASFollowTrajectory::ExecState ASFollowTrajectory::startMoveToPoint(
   size_t                  j;      // working index
   int                     rc;     // return code
 
-  ROS_INFO("+ Waypoint %zd of %zd", iWaypoint, m_iNumWaypoints);
+  ROS_INFO("+ Waypoint %zd/%zd", iWaypoint, m_iEndpoint);
 
   //
   // Load trajectory point.
@@ -352,6 +354,7 @@ ASFollowTrajectory::ExecState
                     ASFollowTrajectory::monitorMoveToWaypoint(ssize_t iWaypoint)
 {
   double fDist;
+  double fEpsilon;
 
   //
   // Action was preempted.
@@ -376,12 +379,13 @@ ASFollowTrajectory::ExecState
   }
 
   // measure move and publish feedback
-  fDist = provideFeedback(iWaypoint);
+  fDist    = provideFeedback(iWaypoint);
+  fEpsilon = iWaypoint < m_iEndpoint? m_fEpsilonWp: m_fEpsilonEp;
 
   //
-  // Successfully reached waypoint.
+  // Successfully reached intermediate waypoint.
   //
-  if( fDist < m_fEpsilon )
+  if( fDist < fEpsilon )
   {
     ROS_INFO("  Reached waypoint %zd in %d iterations",
       iWaypoint, m_iterMonitor+1);
@@ -405,6 +409,8 @@ ASFollowTrajectory::ExecState
 ASFollowTrajectory::ExecState
                     ASFollowTrajectory::monitorMoveToEndpoint(ssize_t iWaypoint)
 {
+  double  fDist;
+
   //
   // Action was preempted.
   //
@@ -435,8 +441,14 @@ ASFollowTrajectory::ExecState
   //
   if( !m_robot.isInMotion() )
   {
-    ROS_INFO("  Reached endpoint %zd in %d iterations.",
+    fDist = measureDist(iWaypoint);
+    ROS_INFO("  Reached final endpoint %zd in %d iterations.",
       iWaypoint, m_iterMonitor+1);
+    ROS_INFO("    %s dist=%lf(%lf deg).",
+      NormName(m_eNorm), fDist, radToDeg(fDist));
+    ROS_INFO("    worst joint=%s, %s dist=%lf(%lf deg).",
+      m_strWorstJointName.c_str(),
+      NormName(m_eNorm), m_fWorstJointDist, radToDeg(m_fWorstJointDist));
     m_bTrajCompleted = true;
     return ExecStateTerminate;
   }
