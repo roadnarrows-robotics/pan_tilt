@@ -126,6 +126,16 @@ namespace pan_tilt
       return m_nMasterServoId;
     }
 
+    /*!
+     * \brief Get joint position and velocity limits.
+     *
+     * \param [out] fMinPos   Joint minimum position (radians).
+     * \param [out] fMaxPos   Joint maximum position (radians).
+     * \param [out] fMaxPos   Joint maximum velocity (radians/second).
+     */
+    void getJointLimits(double &fMinPos, double &fMaxPos, double &fMaxVel)
+                                                                      const;
+
   protected:
     // (derived) specification
     std::string m_strName;            ///< joint name

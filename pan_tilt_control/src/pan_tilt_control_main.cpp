@@ -123,7 +123,7 @@ static const PkgInfo_T PkgInfo =
 {
   NodeName,                       ///< package name
   "1.0.0",                        ///< package version
-  "2016.05.24",                   ///< date (and time)
+  "2016.06.01",                   ///< date (and time)
   "2016",                         ///< year
   NodeName,                       ///< package full name
   "Robin Knight, Daniel Packard", ///< authors

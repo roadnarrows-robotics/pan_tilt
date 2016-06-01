@@ -83,6 +83,7 @@
 // RoadNarrows embedded pan-tilt library.
 //
 #include "pan_tilt/pan_tilt.h"
+#include "pan_tilt/ptTune.h"
 #include "pan_tilt/ptRobot.h"
 
 //
@@ -123,7 +124,7 @@ static const char *NormName(PanTiltNorm eNorm)
 void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
                                                                           goal)
 {
-  double    fHz = 60.0;   // feedback fequency
+  double    fHz = PtTuneTrajHz;   // controll and feedback fequency
   double    fDistOrigin;  // distance from first waypoint to robot position
   ssize_t   iWaypoint;    // working waypoint index
 
@@ -131,9 +132,9 @@ void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
       goal->trajectory.points.size());
 
   // get current trajectory parameters
-  m_eNorm       = PanTiltNormL1;
-  m_fEpsilonWp  = degToRad(10.0);
-  m_fEpsilonEp  = degToRad(2.0);
+  m_eNorm       = PtTuneTrajNorm;
+  m_fEpsilonWp  = PtTuneTrajEpsilonWp;
+  m_fEpsilonEp  = PtTuneTrajEpsilonEp;
 
   ROS_INFO("  norm=%s, epsilon_wp=%.3lf(%.2lf deg), "
       "epsilon_ep=%.3lf(%.2lf deg).",
@@ -141,11 +142,14 @@ void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
       m_fEpsilonWp, radToDeg(m_fEpsilonWp),
       m_fEpsilonEp, radToDeg(m_fEpsilonEp));
 
-  // the joint goal trajectory path
-  m_traj = goal->trajectory;
+  //
+  // Keep double books. The joint goal and internal transformed trajectory path.
+  //
+  m_trajGoal  = goal->trajectory;
+  m_trajTrans = goal->trajectory;
 
   // number of waypoints
-  m_iNumWaypoints = (ssize_t)m_traj.points.size();
+  m_iNumWaypoints = (ssize_t)m_trajGoal.points.size();
 
   // No path. Is this an error or a null success?
   if( m_iNumWaypoints == 0 )
@@ -273,32 +277,99 @@ ssize_t ASFollowTrajectory::nextWaypoint(ssize_t iCurpoint)
 
 void ASFollowTrajectory::groomWaypoint(ssize_t iWaypoint)
 {
-  static double TuneNonZeroVel= degToRad(0.2);    // non-zero velocity threshold
-  static double TuneMinVel    = degToRad(5.0);    // minimum absolute velocity
-  static double TuneMaxVel    = degToRad(120.0);  // maximum absolute velocity
-
-  size_t  len;        // vector length
-  size_t  j;          // working index
-  double  v;          // [absolute] joint velocity
-
-  len     = m_traj.joint_names.size();
+  PanTiltRobotJoint *pJoint;  // working joint
+  string  jointName;          // joint name
+  double  jointMinPos;        // joint minimum position limit
+  double  jointMaxPos;        // joint maximum position limit
+  double  jointCurPos;        // joint current position
+  double  jointMaxVel;        // joint maximum velocity limit
+  double  p, p_prime;         // joint (transformed) goal position (radians)
+  double  v, v_prime;         // joint (transformed) goal velocity (rads/sec)
+  size_t  j;                  // working index
 
   //
-  // Characterize velocity V
+  // Characterize position P and velocity V and transform.
   //
-  for(j=0; j<len; ++j)
+  for(j=0; j<m_trajGoal.joint_names.size(); ++j)
   {
-    v = fabs(m_traj.points[iWaypoint].velocities[j]);
+    jointName = m_trajGoal.joint_names[j];
+
+    // wtf?
+    if( (pJoint = m_robot.getJoint(jointName)) == NULL )
+    {
+      continue;
+    }
+
+    // joint position and velocity limits
+    pJoint->getJointLimits(jointMinPos, jointMaxPos, jointMaxVel);
+
+    // goal
+    p = m_trajGoal.points[iWaypoint].positions[j];
+    v = fabs(m_trajGoal.points[iWaypoint].velocities[j]);
+
+    //
+    // Intermediate waypoint case.
+    //
+    if( iWaypoint < m_iEndpoint )
+    {
+      // joint current position
+      jointCurPos = m_robot.getCurJointPosition(*pJoint);
+
+      // add overshoot so that the servo will not stop at the goal position
+      if( p > jointCurPos )
+      {
+        p_prime = p + PtTuneTrajWpPosOver;
+      }
+      else
+      {
+        p_prime = p - PtTuneTrajWpPosOver;
+      }
+
+      v_prime = v;
+    }
 
     //
     // Special final endpoint case. 
     //
-    if( (iWaypoint == m_iEndpoint) && (iWaypoint > 0) && (v < TuneNonZeroVel) )
+    else
     {
-      v = fabs(m_traj.points[iWaypoint-1].velocities[j]);
+      // no overshoot
+      p_prime = p;
+
+      // end point velocity is zero, so use the previous velocity to get there.
+      if( (iWaypoint > 0) && (v < PtTuneTrajNonZeroVel) )
+      {
+        v_prime = fabs(m_trajGoal.points[iWaypoint-1].velocities[j]);
+      }
+      else
+      {
+        v_prime = v;
+      }
     }
 
-    m_traj.points[iWaypoint].velocities[j] = fcap(v, 0.0, TuneMaxVel);
+    // derate velocity
+    v_prime *= PtTuneTrajVelDerate;
+
+    // make sure any non-zero velocity is at the minimum.
+    if( (v_prime >= PtTuneTrajNonZeroVel) && (v_prime < PtTuneTrajMinVel) )
+    {
+      v_prime = PtTuneTrajMinVel;
+    }
+
+    // cap positions and velocities
+    p       = fcap(p, jointMinPos, jointMaxPos);
+    v       = fcap(v, 0.0, jointMaxVel);
+    p_prime = fcap(p_prime, jointMinPos, jointMaxPos);
+    v_prime = fcap(v_prime, 0.0, jointMaxVel);
+
+    //
+    // Load the waypoint values. The action server sends the transformed
+    // waypoint to the pan-tilt robot but tracks the goal.
+    //
+    m_trajGoal.points[iWaypoint].positions[j]   = p;
+    m_trajGoal.points[iWaypoint].velocities[j]  = v;
+    m_trajTrans.points[iWaypoint].positions[j]  = p_prime;
+    m_trajTrans.points[iWaypoint].velocities[j] = v_prime;
   }
 }
 
@@ -314,21 +385,21 @@ ASFollowTrajectory::ExecState ASFollowTrajectory::startMoveToPoint(
   //
   // Load trajectory point.
   //
-  for(j=0; j<m_traj.joint_names.size(); ++j)
+  for(j=0; j<m_trajGoal.joint_names.size(); ++j)
   {
     groomWaypoint(iWaypoint);
 
-    pt.append(m_traj.joint_names[j],
-              m_traj.points[iWaypoint].positions[j], 
-              m_traj.points[iWaypoint].velocities[j]);
+    pt.append(m_trajTrans.joint_names[j],
+              m_trajTrans.points[iWaypoint].positions[j], 
+              m_trajTrans.points[iWaypoint].velocities[j]);
 
     // RDK really ROS_DEBUG
     ROS_INFO("    %-6s: pos=%.3lf(%.1lf deg) vel=%.3lf(%.1lf deg/sec)",
-      m_traj.joint_names[j].c_str(), 
-      m_traj.points[iWaypoint].positions[j], 
-      radToDeg(m_traj.points[iWaypoint].positions[j]), 
-      m_traj.points[iWaypoint].velocities[j],
-      radToDeg(m_traj.points[iWaypoint].velocities[j]));
+      m_trajGoal.joint_names[j].c_str(), 
+      m_trajGoal.points[iWaypoint].positions[j], 
+      radToDeg(m_trajGoal.points[iWaypoint].positions[j]), 
+      m_trajGoal.points[iWaypoint].velocities[j],
+      radToDeg(m_trajGoal.points[iWaypoint].velocities[j]));
   }
 
   //
@@ -495,11 +566,11 @@ double ASFollowTrajectory::measureDist(ssize_t iWaypoint)
   // Alternerates:    L2 of zero point (end effector)
   //                  attachment point) in Cartesian space. 
   //
-  for(j=0; j<m_traj.joint_names.size(); ++j)
+  for(j=0; j<m_trajGoal.joint_names.size(); ++j)
   {
-    jointName   = m_traj.joint_names[j];
-    jointWpPos  = m_traj.points[iWaypoint].positions[j]; 
-    jointWpVel  = m_traj.points[iWaypoint].velocities[j]; 
+    jointName   = m_trajGoal.joint_names[j];
+    jointWpPos  = m_trajGoal.points[iWaypoint].positions[j]; 
+    jointWpVel  = m_trajGoal.points[iWaypoint].velocities[j]; 
 
     if( jointCurState.hasJoint(jointName) )
     {
@@ -568,11 +639,11 @@ double ASFollowTrajectory::provideFeedback(ssize_t iWaypoint)
   // Alternerates:    L1 or L2 of joint positions, or zero point (end effector)
   //                  attachment point) Euclidean distance.
   //
-  for(j=0; j<m_traj.joint_names.size(); ++j)
+  for(j=0; j<m_trajGoal.joint_names.size(); ++j)
   {
-    jointName   = m_traj.joint_names[j];
-    jointWpPos  = m_traj.points[iWaypoint].positions[j]; 
-    jointWpVel  = m_traj.points[iWaypoint].velocities[j]; 
+    jointName   = m_trajGoal.joint_names[j];
+    jointWpPos  = m_trajGoal.points[iWaypoint].positions[j]; 
+    jointWpVel  = m_trajGoal.points[iWaypoint].velocities[j]; 
     jointCurPos = jointWpPos;
     jointCurVel = jointWpVel;
 

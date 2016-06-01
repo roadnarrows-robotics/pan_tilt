@@ -201,9 +201,10 @@ namespace pan_tilt_control
     double                  m_fEpsilonEp;   ///< endpoint distance epsilon
 
     // goal trajectory
-    trajectory_msgs::JointTrajectory m_traj;  ///< goal trajectory
-    ssize_t       m_iNumWaypoints;            ///< number of goal waypoints
-    ssize_t       m_iEndpoint;                ///< endpoint index
+    trajectory_msgs::JointTrajectory m_trajGoal;  ///< goal trajectory
+    trajectory_msgs::JointTrajectory m_trajTrans; ///< transformed trajectory
+    ssize_t       m_iNumWaypoints;                ///< number of goal waypoints
+    ssize_t       m_iEndpoint;                    ///< endpoint index
 
     // state
     ExecState     m_eState;             ///< execution state

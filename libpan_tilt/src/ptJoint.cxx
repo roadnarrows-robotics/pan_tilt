@@ -194,6 +194,15 @@ PanTiltRobotJoint PanTiltRobotJoint::operator=(const PanTiltRobotJoint &rhs)
   return *this;
 }
 
+void PanTiltRobotJoint::getJointLimits(double &fMinPos,
+                                       double &fMaxPos,
+                                       double &fMaxVel) const
+{
+  fMinPos = m_fMinSoftLimitRads;
+  fMaxPos = m_fMaxSoftLimitRads;
+  fMaxVel = m_fMaxJointRadsPerSec;
+}
+
 
 // -----------------------------------------------------------------------------
 // Class PanTiltJointState

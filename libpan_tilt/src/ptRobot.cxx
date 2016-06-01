@@ -74,6 +74,7 @@
 
 #include "pan_tilt/pan_tilt.h"
 #include "pan_tilt/ptUtils.h"
+#include "pan_tilt/ptTune.h"
 #include "pan_tilt/ptSpec.h"
 #include "pan_tilt/ptDesc.h"
 #include "pan_tilt/ptXmlCalib.h"
