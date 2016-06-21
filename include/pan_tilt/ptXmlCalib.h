@@ -59,7 +59,7 @@
 #include "tinyxml.h"
 
 #include "rnr/rnrconfig.h"
-#include "rnr/Xml.h"
+#include "rnr/appkit/Xml.h"
 
 #include "pan_tilt/pan_tilt.h"
 #include "pan_tilt/ptUtils.h"
