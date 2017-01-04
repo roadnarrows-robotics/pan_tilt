@@ -11,5 +11,5 @@ Pan-Tilt ROS Wiki:
 * [**Pan-Tilt ROS Wiki - Home**](https://github.com/roadnarrows-robotics/pan_tilt/wiki)
 
 ## Store
-Visit the RoadNarrows store to purchase you very own!
-* [**RoadNarrows Store**](http://www.roadnarrows-store.com/pan-tilt-mount.html)
+Visit the RoadNarrows store to purchase your very own!
+* [**RoadNarrows Store**](http://www.roadnarrows.com/products/pan-tilt-mount)
