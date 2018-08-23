@@ -111,7 +111,7 @@ namespace pan_tilt_control
   class ASFollowTrajectory
   {
   public:
-    static const double MaxSecs = 10.0; ///< maximum seconds to reach a waypoint
+    static const double MaxSecs;  ///< maximum seconds to reach a waypoint
 
     /*!
      * \brief Trajectory execution states.

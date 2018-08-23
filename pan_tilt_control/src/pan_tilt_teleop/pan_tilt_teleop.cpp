@@ -18,7 +18,7 @@
  * \author Robin Knight (robin.knight@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2014-2016  RoadNarrows LLC
+ * (C) 2014-2018  RoadNarrows LLC
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
@@ -169,6 +169,24 @@ PanTiltTeleop::PanTiltTeleop(ros::NodeHandle &nh, double hz) :
   m_nWdRobotTimeout   = countsPerSecond(5.0);
   m_bHasFullComm      = false;
 
+  // C++11 or greater
+#if __cplusplus >= 201103L
+  map<int, int> m_buttonState = {
+      {ButtonIdContSweep,   0},
+      {ButtonIdEStop,       0},
+      {ButtonIdContPan,     0},
+      {ButtonIdGotoZeroPt,  0},
+
+      {ButtonIdPause,       0},
+      {ButtonIdToggleMode,  0},
+      {ButtonIdStart,       0},
+
+      {ButtonIdTilt,        0},
+      {ButtonIdPan,         0}
+    };
+
+  // C++98
+#else
   m_buttonState = map_list_of
       (ButtonIdContSweep,   0)
       (ButtonIdEStop,       0)
@@ -181,6 +199,7 @@ PanTiltTeleop::PanTiltTeleop(ros::NodeHandle &nh, double hz) :
 
       (ButtonIdTilt,        0)
       (ButtonIdPan,         0);
+#endif
 
   m_rumbleLeft    = 0;
   m_rumbleRight   = 0;

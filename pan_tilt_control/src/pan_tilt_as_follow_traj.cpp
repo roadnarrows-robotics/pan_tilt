@@ -18,7 +18,7 @@
  * \author Robin Knight (robin.knight@roadnarrows.com)
  *
  * \par Copyright:
- * (C) 2015-2016  RoadNarrows LLC
+ * (C) 2015-2018  RoadNarrows LLC
  * (http://www.roadnarrows.com)
  * \n All Rights Reserved
  */
@@ -120,6 +120,8 @@ static const char *NormName(PanTiltNorm eNorm)
       return "?";
   }
 }
+
+const double ASFollowTrajectory::MaxSecs = 10.0;
 
 void ASFollowTrajectory::execute_cb(const FollowJointTrajectoryGoalConstPtr&
                                                                           goal)
